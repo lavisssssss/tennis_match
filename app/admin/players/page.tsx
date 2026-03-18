@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { buildDisplayName, createPlayer, updatePlayer, type Player } from "@/lib/players";
+import {
+  buildDisplayName,
+  createPlayer,
+  deletePlayer,
+  updatePlayer,
+  type Player,
+} from "@/lib/players";
 import { usePlayers } from "@/hooks/usePlayers";
 
 type EditState = {
@@ -22,6 +28,7 @@ export default function AdminPlayersPage() {
   const { players, loading, error, refresh } = usePlayers();
   const [creating, setCreating] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", phone_last4: "" });
   const [edit, setEdit] = useState<EditState | null>(null);
@@ -59,6 +66,28 @@ export default function AdminPlayersPage() {
     });
   }
 
+  async function onDelete(p: Player) {
+    if (
+      !window.confirm(
+        `「${p.display_name}」 선수를 삭제할까요?\n참석·경기 기록에 연결된 경우 삭제되지 않을 수 있습니다.`,
+      )
+    ) {
+      return;
+    }
+    setToast(null);
+    setDeletingId(p.id);
+    try {
+      await deletePlayer(p.id);
+      if (edit?.id === p.id) setEdit(null);
+      setToast("선수를 삭제했습니다.");
+      await refresh();
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   async function onSaveEdit() {
     if (!edit) return;
     setToast(null);
@@ -86,7 +115,7 @@ export default function AdminPlayersPage() {
           선수 관리 (Admin · Phase 2)
         </h2>
         <p className="text-xs text-slate-600">
-          선수 목록을 조회하고, 새 선수를 추가하거나 기존 정보를 수정합니다.
+          선수 목록을 조회하고, 추가·수정·삭제할 수 있습니다. (참석/경기에 연결된 선수는 삭제되지 않을 수 있습니다.)
         </p>
       </section>
 
@@ -207,6 +236,7 @@ export default function AdminPlayersPage() {
                       : autoDisplayName
                     : p.display_name;
                   const isSaving = savingId === p.id;
+                  const isDeleting = deletingId === p.id;
 
                   return (
                     <tr key={p.id} className="text-sm text-slate-800">
@@ -338,13 +368,24 @@ export default function AdminPlayersPage() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => beginEdit(p)}
-                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-700 hover:bg-slate-50"
-                          >
-                            수정
-                          </button>
+                          <div className="flex flex-col gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => beginEdit(p)}
+                              disabled={isDeleting || deletingId !== null}
+                              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              수정
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDelete(p)}
+                              disabled={isDeleting || deletingId !== null}
+                              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-[12px] font-semibold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isDeleting ? "삭제 중..." : "삭제"}
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>

@@ -94,3 +94,15 @@ export async function updatePlayer(
   return data as Player;
 }
 
+export async function deletePlayer(id: string) {
+  const { error } = await supabase.from("players").delete().eq("id", id);
+  if (error) {
+    const msg = error.message;
+    if (/foreign key|violates|참조/i.test(msg) || /23503/.test(msg)) {
+      throw new Error(
+        "이 선수는 참석·경기 기록 등에 연결되어 있어 삭제할 수 없습니다. 먼저 관련 데이터를 정리해 주세요.",
+      );
+    }
+    throw new Error(msg);
+  }
+}
