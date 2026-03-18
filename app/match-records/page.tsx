@@ -134,7 +134,7 @@ export default function MatchRecordsPage() {
                     <div className="w-14 shrink-0 text-left">
                       {winnerSide === "A" ? (
                         <span className="inline-flex rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                          Winner
+                          Win
                         </span>
                       ) : null}
                     </div>
@@ -146,7 +146,7 @@ export default function MatchRecordsPage() {
                     <div className="w-14 shrink-0 text-right">
                       {winnerSide === "B" ? (
                         <span className="inline-flex rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                          Winner
+                          Win
                         </span>
                       ) : null}
                     </div>
