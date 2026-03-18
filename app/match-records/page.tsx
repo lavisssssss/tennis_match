@@ -129,27 +129,21 @@ export default function MatchRecordsPage() {
                 return (
                   <div
                     key={m.id}
-                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"
+                    className="relative rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800"
                   >
-                    <div className="w-14 shrink-0 text-left">
-                      {winnerSide === "A" ? (
-                        <span className="inline-flex rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                          Win
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <div className="min-w-0 flex-1 text-center font-medium tabular-nums">
-                      <span className="inline-block truncate">{line}</span>
-                    </div>
-
-                    <div className="w-14 shrink-0 text-right">
-                      {winnerSide === "B" ? (
-                        <span className="inline-flex rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                          Win
-                        </span>
-                      ) : null}
-                    </div>
+                    {winnerSide === "A" ? (
+                      <span className="absolute left-2 top-1/2 z-[1] -translate-y-1/2 whitespace-nowrap rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        Win
+                      </span>
+                    ) : null}
+                    {winnerSide === "B" ? (
+                      <span className="absolute right-2 top-1/2 z-[1] -translate-y-1/2 whitespace-nowrap rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        Win
+                      </span>
+                    ) : null}
+                    <p className="mx-auto max-w-full break-words px-11 text-center text-sm font-medium leading-snug tabular-nums">
+                      {line}
+                    </p>
                   </div>
                 );
               })}
