@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MainNav } from "@/components/MainNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tennis Club Match Manager",
+  title: "LGES Tennis Manager (beta)",
   description: "테니스 동호회 경기 일정 및 Elo 관리 웹앱",
 };
 
@@ -14,57 +15,33 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-slate-100 text-slate-800">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-slate-100 font-sans text-slate-800">
         <div className="min-h-screen bg-slate-100">
           <header className="border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
-            <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-              <div className="space-y-0.5">
-                <h1 className="text-base font-semibold tracking-tight text-slate-800">
-                  <Link href="/" className="hover:underline">
-                    Tennis Club Match Manager
+            <div className="mx-auto max-w-md space-y-3 px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <h1 className="text-lg font-bold leading-tight tracking-tight text-slate-800">
+                  <Link href="/" className="hover:text-teal-700">
+                    LGES Tennis Manager{" "}
+                    <span className="font-normal text-slate-500">(beta)</span>
                   </Link>
                 </h1>
-                <p className="text-[11px] text-slate-500">
-                  테니스 동호회 경기 운영을 위한 MVP
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <nav className="hidden items-center gap-1 sm:flex">
-                  <Link
-                    href="/"
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Home
-                  </Link>
-                  <Link
-                    href="/matchs"
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Matchs
-                  </Link>
-                  <Link
-                    href="/match-entry"
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Match Entry
-                  </Link>
-                  <Link
-                    href="/match-records"
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Match Records
-                  </Link>
-                </nav>
                 <Link
                   href="/admin"
-                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
+                  className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
                 >
                   Admin
                 </Link>
-                <span className="rounded-full bg-teal-500 px-4 py-1.5 text-[11px] font-medium text-white">
-                  Phase 5
-                </span>
               </div>
+              <MainNav />
             </div>
           </header>
           <main className="mx-auto max-w-md px-4 py-4">{children}</main>
@@ -73,4 +50,3 @@ export default function RootLayout({
     </html>
   );
 }
-

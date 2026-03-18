@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { PageMascot } from "@/components/PageMascot";
 import { listAttendanceForSession, type AttendanceRowWithPlayer } from "@/lib/attendance";
 import { listSessions, type Session, type SessionStatus } from "@/lib/matchs";
 
@@ -102,45 +102,20 @@ export default function MatchsPage() {
     <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
       <section className="space-y-1">
         <h2 className="text-xl font-semibold tracking-tight text-slate-800">
-          Matchs
+          매치 조회
         </h2>
         <p className="text-xs text-slate-600">
-          매치(경기 일정) 목록을 확인하고, 선택한 매치의 참석 현황을 확인합니다.
+          경기 일정을 확인하고, 선택한 매치의 참석 현황을 확인합니다.
         </p>
       </section>
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => refresh()}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            새로고침
-          </button>
-          <Link
-            href="/"
-            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Home
-          </Link>
-        </div>
-        <span className="rounded-full bg-teal-500 px-4 py-1.5 text-[11px] font-medium text-white">
-          Phase 3
-        </span>
-      </div>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="space-y-0.5">
-            <p className="text-sm font-semibold text-slate-800">매치 리스트</p>
-            <p className="text-[11px] text-slate-500">
-              탭해서 참석 현황을 확인하세요.
-            </p>
-          </div>
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-medium text-slate-700">
-            {matchs.length}개
-          </span>
+      <section className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <PageMascot variant="matchs" />
+        <div className="mb-3 space-y-0.5 pr-14">
+          <p className="text-sm font-semibold text-slate-800">매치 리스트</p>
+          <p className="text-[11px] text-slate-500">
+            탭해서 참석 현황을 확인하세요.
+          </p>
         </div>
 
         {loading ? (

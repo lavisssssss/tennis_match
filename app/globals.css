@@ -2,8 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-}
+/*
+  Typography: Noto Sans KR (400 / 500 / 600 / 700) — Google Fonts, display=swap, preconnect in layout.
+  Scale: body 16px · sm 14px · xl 20px · 2xl 24px (see tailwind.config theme.extend.fontSize)
+*/
 
+@layer base {
+  html {
+    @apply font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-100 text-base font-normal leading-relaxed text-slate-800;
+    letter-spacing: -0.01em;
+  }
+
+  h1 {
+    @apply font-sans text-2xl font-bold leading-tight tracking-tight text-slate-900;
+  }
+
+  h2 {
+    @apply font-sans text-xl font-bold leading-snug tracking-tight text-slate-900;
+  }
+
+  h3 {
+    @apply font-sans text-base font-medium leading-snug text-slate-800;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    @apply font-sans;
+  }
+
+  label {
+    @apply font-sans;
+  }
+}

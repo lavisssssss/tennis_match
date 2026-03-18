@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PageMascot } from "@/components/PageMascot";
 import { listApprovedMatches, parseScore, type MatchRecordWithJoins } from "@/lib/matches";
 import { listSessions, type Session } from "@/lib/matchs";
 
@@ -76,20 +77,15 @@ export default function MatchRecordsPage() {
   return (
     <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
       <section className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-slate-800">경기 기록 조회</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-800">결과 조회</h2>
         <p className="text-xs text-slate-600">
-          승인된 경기 기록만 조회합니다. 매치 일정을 선택하면 결과가 한 줄씩 표시됩니다.
+          승인된 경기 기록만 조회가능합니다.
         </p>
       </section>
 
-      <div className="flex items-center justify-end gap-2">
-        <span className="rounded-full bg-teal-500 px-4 py-1.5 text-[11px] font-medium text-white">
-          Phase 5
-        </span>
-      </div>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <label className="space-y-1">
+      <section className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <PageMascot variant="records" />
+        <label className="block space-y-1 pr-14">
           <span className="text-xs font-semibold text-slate-700">매치 일정 선택</span>
           <select
             value={sessionId}

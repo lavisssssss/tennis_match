@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PageMascot } from "@/components/PageMascot";
 import { createPendingMatch } from "@/lib/matches";
 import { listPlayers, type Player } from "@/lib/players";
 import { listSessions, type Session } from "@/lib/matchs";
@@ -141,19 +142,14 @@ export default function MatchEntryPage() {
   return (
     <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
       <section className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-slate-800">경기 결과 입력</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-800">결과 등록</h2>
         <p className="text-xs text-slate-600">
-          게스트가 결과를 입력하면 <span className="font-semibold">pending</span>으로 저장되고, Admin이 승인/반려합니다.
+          경기 결과를 입력합니다.(현재 복식만 지원)
         </p>
       </section>
 
-      <div className="flex items-center justify-end gap-2">
-        <span className="rounded-full bg-teal-500 px-4 py-1.5 text-[11px] font-medium text-white">
-          Phase 5
-        </span>
-      </div>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <PageMascot variant="entry" />
         {loading ? (
           <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">불러오는 중...</div>
         ) : error ? (
@@ -169,7 +165,7 @@ export default function MatchEntryPage() {
         ) : null}
 
         <div className="grid grid-cols-1 gap-3">
-          <label className="space-y-1">
+          <label className="block space-y-1 pr-14">
             <span className="text-xs font-semibold text-slate-700">입력자</span>
             <select
               value={createdByPlayerId}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePlayers } from "@/hooks/usePlayers";
 import { getAttendance, upsertAttendance, type AttendanceStatus } from "@/lib/attendance";
+import { PageMascot } from "@/components/PageMascot";
 import { listUpcomingOpenSessions, type Session } from "@/lib/matchs";
 
 function formatDate(dateISO: string) {
@@ -106,10 +107,10 @@ export default function HomePage() {
     <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
       <section className="space-y-1">
         <h2 className="text-xl font-semibold tracking-tight text-slate-800">
-          홈 (Phase 3)
+          참여 신청
         </h2>
         <p className="text-xs text-slate-600">
-          다음 경기 1개를 확인하고, 이름/참석 상태를 선택해 저장합니다.
+          다가오는 경기 일정을 확인하고 참석여부를 입력합니다. (입력 후 수정가능)
         </p>
       </section>
 
@@ -119,9 +120,10 @@ export default function HomePage() {
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div className="space-y-0.5 min-w-0">
+      <section className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <PageMascot variant="participate" />
+        <div className="mb-4 flex items-start justify-between gap-3 pr-14">
+          <div className="min-w-0 space-y-0.5">
             <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
               Upcoming Matchs
             </p>
@@ -140,9 +142,6 @@ export default function HomePage() {
                   : "Admin이 먼저 세션을 생성해 주세요."}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-teal-500 px-4 py-1.5 text-[11px] font-medium text-white">
-            참석 신청
-          </span>
         </div>
 
         <div className="grid grid-cols-1 gap-3">
