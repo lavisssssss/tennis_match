@@ -48,8 +48,8 @@ function defaultFormFromMatch(m?: Session | null): FormState {
     id: m?.id,
     date: m?.date ?? new Date().toISOString().slice(0, 10),
     location: m?.location ?? "",
-    start_time: m ? formatTime(m.start_time) : "19:00",
-    end_time: m ? formatTime(m.end_time) : "21:00",
+    start_time: m ? formatTime(m.start_time) : "07:00",
+    end_time: m ? formatTime(m.end_time) : "09:00",
     description: m?.description ?? "",
   };
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PageMascot } from "@/components/PageMascot";
 import { createPendingMatch } from "@/lib/matches";
 import { listPlayers, type Player } from "@/lib/players";
-import { listSessions, type Session } from "@/lib/matchs";
+import { listSessions, listUpcomingOpenSessions, type Session } from "@/lib/matchs";
 
 function formatTime(t: string) {
   return t.slice(0, 5);
@@ -62,12 +62,21 @@ export default function MatchEntryPage() {
     setLoading(true);
     setError(null);
     try {
-      const [s, p] = await Promise.all([
+      const [s, p, upcoming] = await Promise.all([
         listSessions({ statuses: ["open"] }),
         listPlayers(),
+        listUpcomingOpenSessions({ limit: 10 }),
       ]);
-      setSessions([...s].sort(sortSessionsDesc));
+      const sorted = [...s].sort(sortSessionsDesc);
+      setSessions(sorted);
       setPlayers(p);
+      const preferId = upcoming[0]?.id;
+      const defaultSessionId =
+        preferId && sorted.some((x) => x.id === preferId) ? preferId : sorted[0]?.id ?? "";
+      setSessionId((cur) => {
+        if (cur && sorted.some((x) => x.id === cur)) return cur;
+        return defaultSessionId;
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "데이터를 불러오는 중 오류가 발생했습니다.");
     } finally {
