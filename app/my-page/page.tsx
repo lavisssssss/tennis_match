@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ApprovedMatchResultRow } from "@/components/ApprovedMatchResultRow";
 import { useTierRoster } from "@/components/TierRosterProvider";
 import { WinLossDonut } from "@/components/WinLossDonut";
 import { usePlayerSession } from "@/hooks/usePlayerSession";
@@ -17,23 +18,21 @@ import { tierBadgeImageSrc } from "@/lib/tierBranding";
 import {
   computeApprovedMatchCareerStats,
   computeRecentGamesDigest,
+  fetchMyApprovedMatchLines,
   type CareerFromMatches,
   type Recent10Digest,
 } from "@/lib/myPageData";
+import type { MatchRecordWithJoins } from "@/lib/matches";
 import { fetchRatingsByPlayerIds, getEloSnapshot, type RatingRow } from "@/lib/ratings";
 
 const TIER_BADGE_PX = 66;
-/** *티어 구분 목록: 본문 `text-[13px]`와 동일 높이 */
-const TIER_LEGEND_MARK_PX = 13;
+const TIER_SYSTEM_MARK_PX = 12;
 
-const TIER_LEGEND_ROWS: { code: TierCode; line: string }[] = [
+const TIER_SYSTEM_ROWS: { code: TierCode; line: string }[] = [
   { code: "wimbledon", line: "Wimbledon (Elite)" },
   { code: "us_open", line: "US Open (Pro)" },
   { code: "roland_garros", line: "Roland Garros (Rising)" },
-  {
-    code: "australian_open_provisional",
-    line: "Australian Open (임시) — 등록게임수 5게임 미만",
-  },
+  { code: "australian_open_provisional", line: "Australian Open (임시)" },
 ];
 
 export default function MyPage() {
@@ -50,6 +49,10 @@ export default function MyPage() {
 
   const [careerStats, setCareerStats] = useState<CareerFromMatches | null>(null);
   const [careerDone, setCareerDone] = useState(false);
+
+  const [myMatches, setMyMatches] = useState<MatchRecordWithJoins[]>([]);
+  const [myMatchesLoading, setMyMatchesLoading] = useState(false);
+  const [myMatchesErr, setMyMatchesErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (ready && !session) router.replace("/");
@@ -115,6 +118,29 @@ export default function MyPage() {
         }
       } finally {
         if (!cancelled) setDigestLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.id]);
+
+  useEffect(() => {
+    if (!session?.id) return;
+    let cancelled = false;
+    (async () => {
+      setMyMatchesLoading(true);
+      setMyMatchesErr(null);
+      try {
+        const rows = await fetchMyApprovedMatchLines(session.id, 80);
+        if (!cancelled) setMyMatches(rows);
+      } catch (e) {
+        if (!cancelled) {
+          setMyMatchesErr(e instanceof Error ? e.message : "전적을 불러오지 못했습니다.");
+          setMyMatches([]);
+        }
+      } finally {
+        if (!cancelled) setMyMatchesLoading(false);
       }
     })();
     return () => {
@@ -198,31 +224,76 @@ export default function MyPage() {
             </p>
           ) : (
             <div className="mt-3 space-y-2">
-              <div className="flex flex-wrap items-center gap-3">
-                {tier ? (
-                  <div
-                    className="relative shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm"
-                    style={{ width: TIER_BADGE_PX, height: TIER_BADGE_PX }}
-                  >
-                    <Image
-                      src={tierBadgeImageSrc(tier.code)}
-                      alt={`${tier.labelKo} 티어 뱃지`}
-                      width={TIER_BADGE_PX}
-                      height={TIER_BADGE_PX}
-                      className="h-full w-full object-contain p-1"
-                      sizes={`${TIER_BADGE_PX}px`}
-                    />
-                  </div>
-                ) : null}
-                <div className="flex min-w-0 flex-col gap-1">
-                  <span className="text-2xl font-bold tabular-nums text-slate-900">{snap.elo}</span>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+                <div className="flex shrink-0 items-stretch gap-2 sm:gap-3">
                   {tier ? (
-                    <span className="text-sm font-semibold tracking-tight text-slate-800">
-                      {formatTierListLabel(tier)}
-                    </span>
+                    <div
+                      className="relative shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm"
+                      style={{ width: TIER_BADGE_PX, height: TIER_BADGE_PX }}
+                    >
+                      <Image
+                        src={tierBadgeImageSrc(tier.code)}
+                        alt={`${tier.labelKo} 티어 뱃지`}
+                        width={TIER_BADGE_PX}
+                        height={TIER_BADGE_PX}
+                        className="h-full w-full object-contain p-1"
+                        sizes={`${TIER_BADGE_PX}px`}
+                      />
+                    </div>
                   ) : (
-                    <span className="text-xs text-slate-400">티어 계산 중…</span>
+                    <div className="shrink-0" style={{ width: TIER_BADGE_PX, height: TIER_BADGE_PX }} aria-hidden />
                   )}
+                  <div
+                    className="flex min-w-0 flex-1 flex-col"
+                    style={{ height: TIER_BADGE_PX }}
+                  >
+                    <div className="flex min-h-0 flex-[1_1_0] items-center overflow-hidden">
+                      <span className="text-xl font-bold tabular-nums leading-none text-slate-900">{snap.elo}</span>
+                    </div>
+                    <div className="flex min-h-0 flex-[1_1_0] items-center overflow-hidden">
+                      {tier ? (
+                        <span className="line-clamp-2 w-full text-left text-[11px] font-semibold leading-tight tracking-tight text-slate-800">
+                          {formatTierListLabel(tier)}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] leading-none text-slate-400">티어 계산 중…</span>
+                      )}
+                    </div>
+                    <div className="flex min-h-0 flex-[1_1_0] items-center overflow-hidden">
+                      <span className="w-full truncate text-left text-[11px] font-medium leading-none text-slate-600">
+                        {session.display_name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1 border-t border-slate-100 pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+                  <p className="text-[10px] font-semibold tracking-wide text-slate-700">Tier System</p>
+                  <ul className="mt-2 space-y-1">
+                    {TIER_SYSTEM_ROWS.map(({ code, line }) => (
+                      <li key={code} className="flex items-center gap-1.5 text-[10px] leading-tight text-slate-600">
+                        <span
+                          className="relative shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white"
+                          style={{
+                            width: TIER_SYSTEM_MARK_PX,
+                            height: TIER_SYSTEM_MARK_PX,
+                          }}
+                        >
+                          <Image
+                            src={tierBadgeImageSrc(code)}
+                            alt=""
+                            width={TIER_SYSTEM_MARK_PX}
+                            height={TIER_SYSTEM_MARK_PX}
+                            className="h-full w-full object-contain p-px"
+                            sizes={`${TIER_SYSTEM_MARK_PX}px`}
+                          />
+                        </span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-[8px] leading-snug text-slate-400">
+                    *등록게임수 5게임 미만 임시 티어 적용
+                  </p>
                 </div>
               </div>
               <p className="text-[11px] text-slate-500">
@@ -296,29 +367,22 @@ export default function MyPage() {
           ) : null}
         </div>
 
-        {/* 티어 구분 */}
+        {/* 3. 나의 전적 */}
         <div className="pt-4">
-          <p className="text-sm font-semibold text-slate-800">*티어 구분</p>
-          <ul className="mt-2 space-y-1.5 text-[13px] leading-relaxed text-slate-600">
-            {TIER_LEGEND_ROWS.map(({ code, line }) => (
-              <li key={code} className="flex items-center gap-1.5">
-                <span
-                  className="relative shrink-0 overflow-hidden rounded-full border border-slate-200 bg-white"
-                  style={{ width: TIER_LEGEND_MARK_PX, height: TIER_LEGEND_MARK_PX }}
-                >
-                  <Image
-                    src={tierBadgeImageSrc(code)}
-                    alt=""
-                    width={TIER_LEGEND_MARK_PX}
-                    height={TIER_LEGEND_MARK_PX}
-                    className="h-full w-full object-contain p-px"
-                    sizes={`${TIER_LEGEND_MARK_PX}px`}
-                  />
-                </span>
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="text-sm font-semibold text-slate-800">나의 전적</p>
+          {myMatchesLoading ? (
+            <p className="mt-2 text-sm text-slate-500">불러오는 중...</p>
+          ) : myMatchesErr ? (
+            <p className="mt-2 text-sm text-rose-600">{myMatchesErr}</p>
+          ) : myMatches.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">승인된 경기 기록이 없습니다.</p>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {myMatches.map((m) => (
+                <ApprovedMatchResultRow key={m.id} m={m} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

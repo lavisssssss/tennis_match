@@ -46,7 +46,8 @@ export const PROVISIONAL_TIER_INFO: EloTierInfo = {
 
 /**
  * UI·뱃지용: 등록게임수 5미만이면 임시 티어, 아니면 전체 Elo 상대 순위 티어.
- * @param matchesPlayedOverride My page 등에서 승인 경기 집계값으로 `ratings.matches_played`를 덮어쓸 때 사용.
+ * @param matchesPlayedOverride My page 등에서 승인 경기 집계값. DB `matches_played`와 어긋날 수 있어,
+ *   임시 티어 판정에는 **roster의 matches_played와 둘 중 큰 값**을 씁니다(랭킹과 동일한 상대 티어 노출).
  */
 export function resolveDisplayTier(
   roster: TierRosterEntry[],
@@ -54,10 +55,11 @@ export function resolveDisplayTier(
   matchesPlayedOverride?: number,
 ): EloTierInfo {
   const entry = roster.find((p) => p.player_id === playerId);
+  const fromRoster = entry?.matches_played ?? 0;
   const played =
     matchesPlayedOverride !== undefined
-      ? matchesPlayedOverride
-      : (entry?.matches_played ?? 0);
+      ? Math.max(fromRoster, matchesPlayedOverride)
+      : fromRoster;
   if (played < PROVISIONAL_TIER_MAX_MATCHES_EXCLUDED) {
     return PROVISIONAL_TIER_INFO;
   }

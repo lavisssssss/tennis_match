@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { PageMascot } from "@/components/PageMascot";
@@ -99,8 +100,8 @@ export default function RankingPage() {
 
       <section className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <PageMascot variant="records" />
-        <div className="mb-3 space-y-1 pr-12">
-          <label className="block space-y-1">
+        <div className="mb-3 flex flex-col gap-2 pr-12 sm:flex-row sm:items-end sm:gap-3">
+          <label className="block min-w-0 flex-1 space-y-1">
             <span className="text-[11px] font-semibold text-slate-700">티어</span>
             <select
               value={tierFilter}
@@ -114,6 +115,12 @@ export default function RankingPage() {
               ))}
             </select>
           </label>
+          <Link
+            href="/match-suggest"
+            className="inline-flex shrink-0 items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 sm:py-2.5"
+          >
+            매칭추천
+          </Link>
         </div>
 
         {loading ? (
@@ -133,6 +140,7 @@ export default function RankingPage() {
                 <th className="w-10 px-1 py-2">#</th>
                 <th className="px-1 py-2">선수</th>
                 <th className="w-16 px-1 py-2 tabular-nums">Elo</th>
+                <th className="w-14 px-1 py-2 tabular-nums">승/패</th>
               </tr>
             </thead>
             <tbody>
@@ -149,6 +157,9 @@ export default function RankingPage() {
                   </td>
                   <td className="px-1 py-2.5 text-center font-semibold tabular-nums text-slate-900">
                     {r.elo}
+                  </td>
+                  <td className="px-1 py-2.5 text-center text-xs font-medium tabular-nums text-slate-700">
+                    {r.wins}/{r.losses}
                   </td>
                 </tr>
               ))}

@@ -44,34 +44,41 @@ export function getEloSnapshot(map: Map<string, RatingRow>, playerId: string) {
 }
 
 /** 티어(상대 순위·임시 티어)용: 등록된 모든 선수 + ratings 없으면 Elo 기본값 · matches_played 0 */
-/** 랭킹 화면: `name` 표기 + Elo (`name` 없으면 display_name 대체) */
+/** 랭킹 화면: `name` 표기 + Elo + 승/패 (`name` 없으면 display_name 대체) */
 export type PlayerRankingRow = {
   player_id: string;
   name: string;
   elo: number;
+  wins: number;
+  losses: number;
 };
 
 export async function fetchAllPlayersRankingRows(): Promise<PlayerRankingRow[]> {
   const [{ data: players, error: pe }, { data: ratings, error: re }] = await Promise.all([
     supabase.from("players").select("id,name,display_name").order("display_name", { ascending: true }),
-    supabase.from("ratings").select("player_id,elo"),
+    supabase.from("ratings").select("player_id,elo,wins,losses"),
   ]);
   if (pe) throw new Error(pe.message);
   if (re) throw new Error(re.message);
 
-  const eloMap = new Map<string, number>();
+  type R = { player_id: string; elo: number; wins?: number; losses?: number };
+  const ratingMap = new Map<string, R>();
   for (const row of ratings ?? []) {
-    eloMap.set((row as { player_id: string }).player_id, (row as { elo: number }).elo);
+    const r = row as R;
+    ratingMap.set(r.player_id, r);
   }
 
   return (players ?? []).map((p) => {
     const id = p.id as string;
     const nm = String((p as { name?: string }).name ?? "").trim();
     const disp = String((p as { display_name?: string }).display_name ?? "").trim();
+    const rr = ratingMap.get(id);
     return {
       player_id: id,
       name: nm || disp || `${id.slice(0, 8)}…`,
-      elo: eloMap.get(id) ?? DEFAULT_ELO,
+      elo: rr?.elo ?? DEFAULT_ELO,
+      wins: Number(rr?.wins ?? 0),
+      losses: Number(rr?.losses ?? 0),
     };
   });
 }

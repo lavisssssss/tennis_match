@@ -38,7 +38,7 @@
 | `/` | 로그인 → 성공 시 `/my-page` |
 | `/my-page` | Elo·티어·전적 |
 | `/participate` | open 매치 선택 + 참석 upsert |
-| `/matchs`, `/match-entry`, `/match-records` | 로그인 필수 |
+| `/matchs`, `/match-entry`, `/match-records`, `/ranking`, `/match-suggest` | 로그인 필수 |
 | `/admin/*` | **staff** + `AdminGuard` |
 | `/admin/roles` | 회원/운영진 |
 | `/admin/venue-fee` | 대관료 정산·마감 |
@@ -52,24 +52,35 @@
 - **5**: match-entry(로그인·attend 풀, 게임 수 0–6), admin 승인/반려, **club_settings 자동 승인**, elo 골격, match-records
 - **병행**: `players.role`, **AdminGuard**, `/admin/roles`
 - **6(대관료)**: `venue_fee_closed` / `venue_settled`, `/admin/venue-fee`
-- **7(Elo·티어·팀)**: `ratings` + `applyEloForApprovedMatch`, 자동/수동 승인 시 DB 반영, `eloTier`, `/my-page`, `/matchs`·`/admin/matchs` 티어 배지, `teamMatching` + Admin 팀 자동 생성
+- **7(Elo·티어·팀)**: `ratings` + `applyEloForApprovedMatch`, 자동/수동 승인 시 DB 반영, `eloTier`, `/my-page`, `/matchs`·`/admin/matchs` 티어 배지, `teamMatching` + 회원 **`/match-suggest`** 매칭추천(Admin 매치 상세 팀 생성 UI는 이전)
 
 ## 2026-03 — My page·티어·표시 정비
 
 - **Elo 기본값**: 앱·`supabase/ratings.sql` 신규 설치 기준 **`DEFAULT_ELO = 1000`** (`lib/ratings.ts` export). 기존 DB는 `ALTER … SET DEFAULT`·필요 시 `UPDATE`로 별도 맞춤.
 - **임시 티어**: `ratings.matches_played`가 **5 미만**이면 **Australian Open (임시)** (`australian_open_provisional`, 마크 `public/tiers/australian-open-provisional.png`). 그 외는 전원 Elo 상대 순위 3분할(`getEloTierRelative`).
 - **`resolveDisplayTier`**: UI 공통. `TierRosterEntry`에 **`matches_played`** 포함, `listAllPlayersWithElo()`가 조회. **`TierBadge`**·**`TierMarkImage`**가 동일 규칙 사용.
-- **My page**: Elo+티어 마크(66px)·통산은 **`computeApprovedMatchCareerStats`**(승인 `matches` 집계) + 통산 승률%; `ratings`만 0일 때도 표시 일치. 최근 10게임 도넛·**영혼의 파트너 Top3**(`players.name`, 경기 많은 순, `(x승 x패/x%)`). `*티어 구분` 안내 + 작은 티어 마크. 빈 최근 승률 문구: 경기 등록 유도.
+- **My page**: Elo+티어 마크(66px)·통산은 **`computeApprovedMatchCareerStats`** + 통산 승률%; 최근 10게임 도넛·**영혼의 파트너 Top3**. (하단 긴 티어 목록은 이후 **Tier System** 칸으로 이전 — **2026-03 후반**.)
 - **결과 조회** (`/match-records`): 각 선수 **티어 마크+이름**, 1세트 스코어 `a:b`, Win 배지 유지.
 - **유틸**: `lib/myPageData.ts` — `computeApprovedMatchCareerStats`, `computeRecentGamesDigest`, (잔존) `listPastSessionsWithVenueNotClosed` 등.
 - **비용 정산 알림**: My page에서 제거됨(이전 staff 전용 블록). 대관 로직은 `myPageData`에 함수 잔존 가능.
 
 ## 2026-03-22 — 회원 네비·랭킹·결과 등록 카피
 
-- **`components/MainNav.tsx`**: 첫 공개 메뉴 **Home → My** (`href` `/my-page`, 비로그인 시 해당 페이지에서 `/`로 리다이렉트 유지). 라벨 **My, 참여신청, 매치조회, 결과등록, 결과조회, 랭킹**(로그인 시 6개). **한 줄 유지**: `flex-nowrap`·`whitespace-nowrap`, 모바일은 작은 글자·촘촘한 패딩·`gap`, 너비 부족 시 **가로 스크롤**(스크롤바 숨김).
-- **`app/ranking/page.tsx`**: 티어 조회 테이블 **열 중앙 정렬**(`#`, 선수, Elo). 선수 열은 티어 마크+이름을 `justify-center`로 묶음.
-- **`lib/ratings.ts` / 랭킹 데이터**: `PlayerRankingRow`는 `{ player_id, name, elo }` 중심으로 단순화, 목록은 `name` 우선·없으면 `display_name` 폴백(과거 요약 기준).
+- **`components/MainNav.tsx`**: **Home → My**·`/my-page` 연결, 6메뉴·한 줄 레이아웃 시작(세부는 **2026-03 후반**).
+- **`app/ranking/page.tsx`**: 테이블 **중앙 정렬**(`#`, 선수+마크, Elo).
+- **`lib/ratings.ts`**: `PlayerRankingRow`에 `wins`/`losses`·승/패 열은 후속 추가.
 - **`app/match-entry/page.tsx`**: 경기 일정 선택 아래 **선택됨: …** 안내·**참석 인원만 표시(대기/취소 제외)** 문구 제거. 제출 버튼 **결과 제출(승인 대기) → 결과 제출**. 버튼 하단 **Admin 승인 안내·게임 수/DB 저장 예시** 문구 제거. 미사용 `selectedSession` 제거.
+
+## 2026-03 후반 — 랭킹·매칭추천·My·티어 UI·공통 경기 카드
+
+- **`lib/eloTier.ts` `resolveDisplayTier`**: My와 랭킹 티어 불일치 방지 — `matchesPlayedOverride`(통산 승인 경기 수)와 roster `matches_played`의 **max**로 임시 티어(5미만) 판정.
+- **`MainNav`**: 첫 항목 **MY**, 4글자 메뉴 **2줄** 표기(참여/신청·매치/조회 등), `flex-1`로 한 줄 균등 너비.
+- **`/ranking`**: 열 **승/패** (`ratings.wins` / `losses`). **매칭추천** → `/match-suggest`.
+- **`/match-suggest`**: 다가오는 open 매치·참석 4명 이상·본인 포함 4인(미선택 시 참석 풀 **랜덤** 보충)·`suggestCourtsFromAttendees`(Snake). 안내 카피: Rating 기반 파트너·매칭상대 등.
+- **`app/admin/matchs`**: **팀 자동 생성** 블록 제거 → 기능을 `/match-suggest`로 이전.
+- **`/my-page`**: Elo 블록 오른쪽 **Tier System** — 4티어 마크+라벨 전체, 하단 회색 `*등록게임수 5게임 미만 임시 티어 적용`. Elo 좌측 3줄에 **display_name**. 하단 **나의 전적**: `fetchMyApprovedMatchLines` + **`components/ApprovedMatchResultRow`** (`/match-records`와 동일 카드).
+- **`lib/matches.ts` `listApprovedMatches`**: 선택적 **`player_id`** — 해당 선수가 뛴 승인 경기만.
+- **`lib/myPageData.ts`**: `fetchMyApprovedMatchLines` 유지; 한 줄 포맷터는 제거(카드 UI로 통일).
 
 ## 미구현(PLAN 기준)
 

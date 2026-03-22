@@ -213,7 +213,12 @@ export async function listPendingMatches(params?: { limit?: number }) {
   }));
 }
 
-export async function listApprovedMatches(params?: { session_id?: string; limit?: number }) {
+export async function listApprovedMatches(params?: {
+  session_id?: string;
+  /** 포함된 경기만 (팀 A/B 중 한 명이라도 일치) */
+  player_id?: string;
+  limit?: number;
+}) {
   let q = supabase
     .from("matches")
     .select(
@@ -223,6 +228,12 @@ export async function listApprovedMatches(params?: { session_id?: string; limit?
     .order("created_at", { ascending: false });
 
   if (params?.session_id) q = q.eq("session_id", params.session_id);
+  if (params?.player_id) {
+    const pid = params.player_id;
+    q = q.or(
+      `teama_player1.eq.${pid},teama_player2.eq.${pid},teamb_player1.eq.${pid},teamb_player2.eq.${pid}`,
+    );
+  }
   if (params?.limit) q = q.limit(params.limit);
 
   const { data, error } = await q;

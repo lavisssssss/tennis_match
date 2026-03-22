@@ -18,12 +18,7 @@ import {
 import { TierBadge } from "@/components/TierBadge";
 import { useTierRoster } from "@/components/TierRosterProvider";
 import { usePlayers } from "@/hooks/usePlayers";
-import { DEFAULT_ELO, listAllPlayersWithElo } from "@/lib/ratings";
-import {
-  suggestCourtsFromAttendees,
-  type AttendeeForMatching,
-  type SuggestedCourt,
-} from "@/lib/teamMatching";
+import { DEFAULT_ELO } from "@/lib/ratings";
 
 type FormState = {
   id?: string;
@@ -51,16 +46,6 @@ function matchStatusClass(status: SessionStatus) {
   return "bg-rose-50 text-rose-700 border-rose-200";
 }
 
-function PlayerEloLine({ p }: { p: AttendeeForMatching }) {
-  return (
-    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-      <span className="font-medium">{p.display_name}</span>
-      <span className="text-[11px] tabular-nums text-slate-500">Elo {p.elo}</span>
-      <TierBadge playerId={p.player_id} />
-    </div>
-  );
-}
-
 function defaultFormFromMatch(m?: Session | null): FormState {
   return {
     id: m?.id,
@@ -74,7 +59,7 @@ function defaultFormFromMatch(m?: Session | null): FormState {
 
 export default function AdminMatchsPage() {
   const { players, loading: playersLoading, error: playersError } = usePlayers();
-  const { roster: tierRoster, reload: reloadTierRoster } = useTierRoster();
+  const { roster: tierRoster } = useTierRoster();
   const [matchs, setMatchs] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,11 +81,6 @@ export default function AdminMatchsPage() {
   );
   const [addPlayerId, setAddPlayerId] = useState<string>("");
   const [addStatus, setAddStatus] = useState<AttendanceStatus>("attend");
-
-  const [teamCourts, setTeamCourts] = useState<SuggestedCourt[]>([]);
-  const [teamRemainder, setTeamRemainder] = useState<AttendeeForMatching[]>([]);
-  const [teamSuggestBusy, setTeamSuggestBusy] = useState(false);
-  const [teamSuggestErr, setTeamSuggestErr] = useState<string | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -124,12 +104,6 @@ export default function AdminMatchsPage() {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    setTeamCourts([]);
-    setTeamRemainder([]);
-    setTeamSuggestErr(null);
-  }, [manageMatchId]);
 
   useEffect(() => {
     async function load() {
@@ -231,45 +205,6 @@ export default function AdminMatchsPage() {
       setToast(e instanceof Error ? e.message : "상태 변경 중 오류가 발생했습니다.");
     } finally {
       setAttendanceBusyPlayerId(null);
-    }
-  }
-
-  async function runTeamSuggest() {
-    if (!manageMatchId) return;
-    const attendRows = attendance.filter((r) => r.status === "attend");
-    if (attendRows.length < 4) {
-      setTeamSuggestErr("참석(attend) 인원이 4명 이상일 때 팀을 제안합니다.");
-      setTeamCourts([]);
-      setTeamRemainder([]);
-      return;
-    }
-    setTeamSuggestBusy(true);
-    setTeamSuggestErr(null);
-    try {
-      const distribution = await listAllPlayersWithElo();
-      await reloadTierRoster();
-      const eloMap = new Map(distribution.map((x) => [x.player_id, x.elo]));
-      const attendees: AttendeeForMatching[] = attendRows.map((r) => ({
-        player_id: r.player_id,
-        display_name: r.player?.display_name ?? r.player_id,
-        elo: eloMap.get(r.player_id) ?? 100,
-      }));
-      const { courts, remainder } = suggestCourtsFromAttendees(attendees);
-      setTeamCourts(courts);
-      setTeamRemainder(remainder);
-      if (courts.length === 0) {
-        setTeamSuggestErr("팀 조합을 만들 수 없습니다.");
-      }
-    } catch (e) {
-      setTeamCourts([]);
-      setTeamRemainder([]);
-      setTeamSuggestErr(
-        e instanceof Error
-          ? e.message
-          : "Elo 조회 실패. Supabase에 ratings 테이블이 있는지 확인하세요.",
-      );
-    } finally {
-      setTeamSuggestBusy(false);
     }
   }
 
@@ -541,64 +476,7 @@ export default function AdminMatchsPage() {
                             </div>
                           )}
 
-                          <div className="mt-3 rounded-lg border border-teal-100 bg-teal-50/40 p-3">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-semibold text-slate-800">팀 자동 생성</p>
-                                <p className="text-[11px] text-slate-600">
-                                  참석(attend) 기준 Elo 내림차순 · 4인 코트마다 1+4 vs 2+3 (Snake)
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => void runTeamSuggest()}
-                                disabled={teamSuggestBusy || attendanceLoading}
-                                className="shrink-0 rounded-xl bg-teal-600 px-3 py-2 text-[11px] font-semibold text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {teamSuggestBusy ? "계산 중…" : "팀 자동 생성"}
-                              </button>
-                            </div>
-                            {teamSuggestErr ? (
-                              <p className="mt-2 text-[11px] font-medium text-rose-700">{teamSuggestErr}</p>
-                            ) : null}
-                            {teamCourts.length > 0 ? (
-                              <ul className="mt-3 space-y-3">
-                                {teamCourts.map((c, idx) => (
-                                  <li
-                                    key={idx}
-                                    className="rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-800"
-                                  >
-                                    <p className="text-[11px] font-semibold text-slate-500">
-                                      코트 {idx + 1}{" "}
-                                      <span className="font-normal text-slate-400">
-                                        · 평균 Elo 차 {c.avgEloDiff.toFixed(1)}
-                                      </span>
-                                    </p>
-                                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                      <div className="rounded-lg bg-slate-50 p-2">
-                                        <p className="text-[10px] font-bold text-teal-800">Team A</p>
-                                        <PlayerEloLine p={c.teamA[0]} />
-                                        <PlayerEloLine p={c.teamA[1]} />
-                                      </div>
-                                      <div className="rounded-lg bg-slate-50 p-2">
-                                        <p className="text-[10px] font-bold text-slate-700">Team B</p>
-                                        <PlayerEloLine p={c.teamB[0]} />
-                                        <PlayerEloLine p={c.teamB[1]} />
-                                      </div>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : null}
-                            {teamRemainder.length > 0 ? (
-                              <p className="mt-2 text-[11px] text-slate-600">
-                                4인 미만 제외 인원 ({teamRemainder.length}명):{" "}
-                                {teamRemainder.map((p) => p.display_name).join(", ")}
-                              </p>
-                            ) : null}
-                          </div>
-
-                          <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
+                          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                             <p className="text-sm font-semibold text-slate-800">
                               참석 인원 추가
                             </p>

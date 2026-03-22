@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import { inferWinnerFromSets, type MatchRecord } from "@/lib/matches";
+import { inferWinnerFromSets, listApprovedMatches, type MatchRecord, type MatchRecordWithJoins } from "@/lib/matches";
 
 export type RecentPartnerStat = {
   player_id: string;
@@ -161,6 +161,13 @@ export async function computeRecentGamesDigest(
     .slice(0, 3);
 
   return { wins, losses, games, winRatePct, partners };
+}
+
+export async function fetchMyApprovedMatchLines(
+  playerId: string,
+  limit = 80,
+): Promise<MatchRecordWithJoins[]> {
+  return listApprovedMatches({ player_id: playerId, limit });
 }
 
 export type StaffVenueAlertSession = {
