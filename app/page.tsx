@@ -11,12 +11,12 @@ export default function HomePage() {
   const { session, ready, login } = usePlayerSession();
 
   useEffect(() => {
-    if (ready && session) router.replace("/my-page");
+    if (ready && session) router.replace("/my-page", { scroll: true });
   }, [ready, session, router]);
 
   function onLoggedIn(player: Player) {
     login(player);
-    router.replace("/my-page");
+    router.replace("/my-page", { scroll: true });
   }
 
   if (!ready) {

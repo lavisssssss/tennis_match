@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { AppHeader } from "@/components/AppHeader";
 import { AppProviders } from "@/components/AppProviders";
 import { MainNav } from "@/components/MainNav";
@@ -7,13 +7,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Ensol Tennis Aces",
   description: "테니스 동호회 경기 일정 및 Elo 관리 웹앱",
-};
-
-/** 인앱·외부 링크 진입 시 노치/상단 크롬 아래로 헤더가 오도록 safe-area 반영 */
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -34,7 +27,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-100 font-sans text-slate-800">
         <AppProviders>
           <div className="min-h-screen bg-slate-100">
-            <header className="border-b border-slate-200 bg-white/90 pt-[max(4rem,calc(env(safe-area-inset-top,0px)+1.25rem))] shadow-sm backdrop-blur-sm md:pt-[max(1rem,env(safe-area-inset-top,0px))]">
+            <header className="border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
               <div className="mx-auto max-w-md space-y-3 px-4 py-3">
                 <AppHeader />
                 <MainNav />
