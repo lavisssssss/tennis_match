@@ -55,11 +55,6 @@ export default function MatchEntryPage() {
 
   const defaultA1ForSessionRef = useRef<string | null>(null);
 
-  const selectedSession = useMemo(
-    () => sessions.find((s) => s.id === sessionId) ?? null,
-    [sessions, sessionId],
-  );
-
   const duplicateError = useMemo(() => {
     const ids = [a1, a2, b1, b2].filter(Boolean);
     if (ids.length < 4) return null;
@@ -310,12 +305,6 @@ export default function MatchEntryPage() {
                 </option>
               ))}
             </select>
-            {selectedSession ? (
-              <p className="text-[11px] text-slate-500">
-                선택됨: {selectedSession.date} {formatTime(selectedSession.start_time)}–{formatTime(selectedSession.end_time)}
-                {selectedSession.description ? ` · ${selectedSession.description}` : ""}
-              </p>
-            ) : null}
             {sessionId && attendanceError ? (
               <p className="text-[11px] text-rose-600">참석자 조회: {attendanceError}</p>
             ) : null}
@@ -325,12 +314,6 @@ export default function MatchEntryPage() {
             {sessionId && !attendanceLoading && !attendanceError && attendingIds.length === 0 ? (
               <p className="text-[11px] text-amber-700">
                 이 일정에 참석으로 신청한 인원이 없습니다. 참여 신청에서 참석을 먼저 등록해 주세요.
-              </p>
-            ) : null}
-            {sessionId && !attendanceLoading && !attendanceError && attendingIds.length > 0 ? (
-              <p className="text-[11px] text-slate-500">
-                아래 목록은 이 매치에 <span className="font-medium text-slate-700">참석</span>으로 등록된 인원만
-                표시합니다. (대기/취소 제외)
               </p>
             ) : null}
           </label>
@@ -455,15 +438,8 @@ export default function MatchEntryPage() {
               canSubmit ? "bg-teal-600 hover:bg-teal-700" : "bg-slate-300"
             }`}
           >
-            {saving ? "저장 중..." : "결과 제출(승인 대기)"}
+            {saving ? "저장 중..." : "결과 제출"}
           </button>
-
-          <p className="text-[11px] text-slate-500">
-            제출 후 Admin의 “경기 기록 승인”에서 승인/반려됩니다.
-          </p>
-          <p className="text-[11px] text-slate-500">
-            스코어는 현재 “게임 수(0~6)”를 간단 입력으로 저장합니다. (예: Team A 4, Team B 2 → DB에는 4-2로 저장)
-          </p>
         </div>
       </section>
     </div>

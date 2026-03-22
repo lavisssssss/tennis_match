@@ -61,11 +61,9 @@ export function PlayerLoginCard({ onLoggedIn }: Props) {
       <PageMascot variant="participate" />
       <div className="mb-4 pr-14">
         <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">로그인</p>
-        <h2 className="text-lg font-semibold text-slate-800">이름 + 뒷자리 4자리로 로그인</h2>
-        <p className="mt-1 text-xs text-slate-600">
-          계정은 <span className="font-medium text-slate-700">이름과 뒷자리를 함께</span> 구분합니다. 동명이인도
-          뒷자리가 다르면 다른 계정입니다.
-        </p>
+        <h2 className="text-lg font-semibold leading-snug text-slate-800">
+          이름과 휴대폰 번호 뒷자리를 입력하세요.
+        </h2>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
@@ -82,7 +80,7 @@ export function PlayerLoginCard({ onLoggedIn }: Props) {
         </label>
 
         <label className="space-y-1">
-          <span className="text-[11px] font-medium text-slate-600">연락처 뒷자리 4자리</span>
+          <span className="text-[11px] font-medium text-slate-600">휴대폰 번호 뒷자리 4자리</span>
           <input
             type="password"
             inputMode="numeric"

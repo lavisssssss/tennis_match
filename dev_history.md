@@ -64,6 +64,13 @@
 - **유틸**: `lib/myPageData.ts` — `computeApprovedMatchCareerStats`, `computeRecentGamesDigest`, (잔존) `listPastSessionsWithVenueNotClosed` 등.
 - **비용 정산 알림**: My page에서 제거됨(이전 staff 전용 블록). 대관 로직은 `myPageData`에 함수 잔존 가능.
 
+## 2026-03-22 — 회원 네비·랭킹·결과 등록 카피
+
+- **`components/MainNav.tsx`**: 첫 공개 메뉴 **Home → My** (`href` `/my-page`, 비로그인 시 해당 페이지에서 `/`로 리다이렉트 유지). 라벨 **My, 참여신청, 매치조회, 결과등록, 결과조회, 랭킹**(로그인 시 6개). **한 줄 유지**: `flex-nowrap`·`whitespace-nowrap`, 모바일은 작은 글자·촘촘한 패딩·`gap`, 너비 부족 시 **가로 스크롤**(스크롤바 숨김).
+- **`app/ranking/page.tsx`**: 티어 조회 테이블 **열 중앙 정렬**(`#`, 선수, Elo). 선수 열은 티어 마크+이름을 `justify-center`로 묶음.
+- **`lib/ratings.ts` / 랭킹 데이터**: `PlayerRankingRow`는 `{ player_id, name, elo }` 중심으로 단순화, 목록은 `name` 우선·없으면 `display_name` 폴백(과거 요약 기준).
+- **`app/match-entry/page.tsx`**: 경기 일정 선택 아래 **선택됨: …** 안내·**참석 인원만 표시(대기/취소 제외)** 문구 제거. 제출 버튼 **결과 제출(승인 대기) → 결과 제출**. 버튼 하단 **Admin 승인 안내·게임 수/DB 저장 예시** 문구 제거. 미사용 `selectedSession` 제거.
+
 ## 미구현(PLAN 기준)
 
 - **Phase 7 옵션**: 티어 경계를 `club_settings`로 설정, 추천 팀을 `matches`에 자동 저장

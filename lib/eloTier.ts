@@ -25,6 +25,12 @@ export type EloTierInfo = {
   labelEn: string;
 };
 
+/** 목록·매치 조회 등: 임시 티어는 한글만, 그 외 `KO · EN`. */
+export function formatTierListLabel(t: EloTierInfo): string {
+  if (t.code === "australian_open_provisional") return t.labelKo;
+  return `${t.labelKo} · ${t.labelEn}`;
+}
+
 /** 상·하위 각각 목표 비율 (합이 1 초과 시 eloTier에서 구간 축소) */
 export const TIER_TOP_FRACTION = 0.3;
 export const TIER_BOTTOM_FRACTION = 0.3;

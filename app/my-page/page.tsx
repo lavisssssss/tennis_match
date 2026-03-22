@@ -7,6 +7,7 @@ import { useTierRoster } from "@/components/TierRosterProvider";
 import { WinLossDonut } from "@/components/WinLossDonut";
 import { usePlayerSession } from "@/hooks/usePlayerSession";
 import {
+  formatTierListLabel,
   PROVISIONAL_TIER_INFO,
   PROVISIONAL_TIER_MAX_MATCHES_EXCLUDED,
   resolveDisplayTier,
@@ -34,11 +35,6 @@ const TIER_LEGEND_ROWS: { code: TierCode; line: string }[] = [
     line: "Australian Open (임시) — 등록게임수 5게임 미만",
   },
 ];
-
-function tierDisplayLabel(code: TierCode, labelKo: string, labelEn: string): string {
-  if (code === "australian_open_provisional") return labelKo;
-  return `${labelKo} · ${labelEn}`;
-}
 
 export default function MyPage() {
   const router = useRouter();
@@ -222,7 +218,7 @@ export default function MyPage() {
                   <span className="text-2xl font-bold tabular-nums text-slate-900">{snap.elo}</span>
                   {tier ? (
                     <span className="text-sm font-semibold tracking-tight text-slate-800">
-                      {tierDisplayLabel(tier.code, tier.labelKo, tier.labelEn)}
+                      {formatTierListLabel(tier)}
                     </span>
                   ) : (
                     <span className="text-xs text-slate-400">티어 계산 중…</span>

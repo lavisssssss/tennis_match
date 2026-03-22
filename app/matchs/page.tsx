@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { PageMascot } from "@/components/PageMascot";
+import { TierMarkImage } from "@/components/TierMarkImage";
 import { usePlayerSession } from "@/hooks/usePlayerSession";
-import { TierBadge } from "@/components/TierBadge";
+import { formatTierListLabel, resolveDisplayTier } from "@/lib/eloTier";
+import { useTierRoster } from "@/components/TierRosterProvider";
 import { listAttendanceForSession, type AttendanceRowWithPlayer } from "@/lib/attendance";
 import { listSessions, type Session, type SessionStatus } from "@/lib/matchs";
 
@@ -36,6 +38,20 @@ function statusClass(status: string) {
   if (status === "wait") return "bg-amber-50 text-amber-700 border-amber-200";
   if (status === "cancel") return "bg-slate-100 text-slate-700 border-slate-200";
   return "bg-slate-100 text-slate-700 border-slate-200";
+}
+
+function MatchsAttendeeTier({ playerId }: { playerId: string }) {
+  const { roster, ready } = useTierRoster();
+  const tier =
+    ready && roster.length > 0 ? resolveDisplayTier(roster, playerId) : null;
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      <TierMarkImage playerId={playerId} size={20} />
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
+        {tier ? formatTierListLabel(tier) : "티어 계산 중…"}
+      </span>
+    </div>
+  );
 }
 
 export default function MatchsPage() {
@@ -237,12 +253,7 @@ export default function MatchsPage() {
                               key={row.id}
                               className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
                             >
-                              <div className="flex min-w-0 flex-1 items-center gap-2">
-                                <p className="min-w-0 truncate text-sm font-medium text-slate-800">
-                                  {row.player?.display_name ?? row.player_id}
-                                </p>
-                                <TierBadge playerId={row.player_id} />
-                              </div>
+                              <MatchsAttendeeTier playerId={row.player_id} />
                               <span
                                 className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusClass(
                                   row.status,
