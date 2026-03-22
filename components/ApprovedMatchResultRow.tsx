@@ -17,14 +17,14 @@ function PlayerMarkName({
   player: JoinedPlayer | null | undefined;
 }) {
   return (
-    <span className="inline-flex min-w-0 max-w-[5.5rem] shrink items-center gap-0.5 sm:max-w-[7rem]">
+    <span className="inline-flex min-w-0 max-w-full items-center gap-1">
       <TierMarkImage playerId={playerId} size={14} />
       <span className="min-w-0 truncate font-medium">{playerLabel(player, playerId)}</span>
     </span>
   );
 }
 
-/** 결과 조회·My page 나의 전적 등 동일 양식 */
+/** 결과 조회·My page 나의 전적 등 동일 양식 — 2줄(팀 A / 팀 B), 가운데 스코어 */
 export function ApprovedMatchResultRow({ m }: { m: MatchRecordWithJoins }) {
   const { a, b } = parseScore(m.set1_score);
   const winnerSide: "A" | "B" | null = a === b ? null : a > b ? "A" : "B";
@@ -47,20 +47,25 @@ export function ApprovedMatchResultRow({ m }: { m: MatchRecordWithJoins }) {
           W
         </span>
       ) : null}
-      <div className="mx-auto flex max-w-full flex-nowrap items-center justify-center gap-x-0.5 overflow-hidden px-7 text-center text-sm leading-none sm:px-8">
-        <span className="shrink-0 font-medium text-slate-600">[</span>
-        <span className="inline-flex min-w-0 flex-nowrap items-center justify-center gap-x-0.5">
+
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] grid-rows-2 gap-x-2 gap-y-2 px-6 sm:px-7">
+        <div className="flex min-w-0 items-center justify-end">
           <PlayerMarkName playerId={m.teama_player1} player={m.teamA_p1} />
+        </div>
+        <div className="row-span-2 flex items-center justify-center self-stretch px-0.5">
+          <span className="shrink-0 text-base font-bold tabular-nums leading-none text-slate-900">
+            {a}:{b}
+          </span>
+        </div>
+        <div className="flex min-w-0 items-center justify-start">
           <PlayerMarkName playerId={m.teama_player2} player={m.teamA_p2} />
-        </span>
-        <span className="shrink-0 px-0.5 font-semibold tabular-nums text-slate-900">
-          {a}:{b}
-        </span>
-        <span className="inline-flex min-w-0 flex-nowrap items-center justify-center gap-x-0.5">
+        </div>
+        <div className="flex min-w-0 items-center justify-end">
           <PlayerMarkName playerId={m.teamb_player1} player={m.teamB_p1} />
+        </div>
+        <div className="flex min-w-0 items-center justify-start">
           <PlayerMarkName playerId={m.teamb_player2} player={m.teamB_p2} />
-        </span>
-        <span className="shrink-0 font-medium text-slate-600">]</span>
+        </div>
       </div>
     </div>
   );
