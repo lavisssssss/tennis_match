@@ -376,7 +376,7 @@ export default function MyPage() {
           ) : myMatchesErr ? (
             <p className="mt-2 text-sm text-rose-600">{myMatchesErr}</p>
           ) : myMatches.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-500">승인된 경기 기록이 없습니다.</p>
+            <p className="mt-2 text-sm text-slate-500">등록된 경기 기록이 없습니다.</p>
           ) : (
             <div className="mt-3 space-y-2">
               {myMatches.map((m) => (

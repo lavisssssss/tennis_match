@@ -48,9 +48,13 @@ export function AppHeader() {
             <Link
               href="/my-page"
               title="마이페이지로 이동"
-              className="max-w-[9rem] truncate rounded-lg px-1.5 py-1 text-right text-[10px] font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 sm:max-w-[15rem] sm:px-2 sm:text-[11px]"
+              className="group max-w-[9rem] truncate rounded-lg px-1.5 py-1 text-right text-[10px] font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 sm:max-w-[15rem] sm:px-2 sm:text-[11px]"
             >
-              환영합니다 <span className="text-slate-900">{session.name}</span>님!
+              환영합니다{" "}
+              <span className="font-semibold text-teal-600 transition group-hover:text-teal-700">
+                {session.name}
+              </span>
+              님!
             </Link>
             {isStaff ? (
               <Link
