@@ -57,11 +57,6 @@ export default function MatchsPage() {
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRowWithPlayer[]>([]);
 
-  const selected = useMemo(
-    () => matchs.find((s) => s.id === selectedId) ?? null,
-    [matchs, selectedId],
-  );
-
   async function refresh() {
     setLoading(true);
     setError(null);
@@ -275,17 +270,6 @@ export default function MatchsPage() {
           </div>
         )}
       </section>
-
-      {selected ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-800">
-            팁
-          </p>
-          <p className="mt-1 text-xs text-slate-600">
-            참여신청에서 저장한 참석 상태는 이 화면과 Admin의 “경기 일정 관리”에서 확인할 수 있습니다.
-          </p>
-        </section>
-      ) : null}
     </div>
   );
 }

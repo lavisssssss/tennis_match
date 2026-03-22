@@ -240,6 +240,7 @@ export default function MatchEntryPage() {
           <p className="text-xs text-slate-600">
             경기 결과를 입력합니다.(현재 복식만 지원)
           </p>
+          <p className="text-xs text-slate-500">참여 신청 후 본인 결과 등록 가능합니다.</p>
         </section>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 shadow-sm">
           <p className="font-medium">로그인이 필요합니다.</p>
@@ -264,6 +265,7 @@ export default function MatchEntryPage() {
         <p className="text-xs text-slate-600">
           경기 결과를 입력합니다.(현재 복식만 지원)
         </p>
+        <p className="text-xs text-slate-500">참여 신청 후 본인 결과 등록 가능합니다.</p>
       </section>
 
       <section className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
