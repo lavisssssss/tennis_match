@@ -40,7 +40,7 @@ export const PROVISIONAL_TIER_MAX_MATCHES_EXCLUDED = 5;
 
 export const PROVISIONAL_TIER_INFO: EloTierInfo = {
   code: "australian_open_provisional",
-  labelKo: "4. Australian Open (임시)",
+  labelKo: "Australian Open (임시)",
   labelEn: "Provisional",
 };
 

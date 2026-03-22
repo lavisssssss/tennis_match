@@ -74,7 +74,7 @@ export function PlayerLoginCard({ onLoggedIn }: Props) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="username"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-teal-500 focus:ring-2"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-base text-slate-800 outline-none ring-teal-500 focus:ring-2"
             placeholder="홍길동"
           />
         </label>
@@ -88,7 +88,7 @@ export function PlayerLoginCard({ onLoggedIn }: Props) {
             value={phoneLast4}
             onChange={(e) => setPhoneLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
             autoComplete="current-password"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-teal-500 focus:ring-2"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-base text-slate-800 outline-none ring-teal-500 focus:ring-2"
             placeholder="1234"
           />
         </label>

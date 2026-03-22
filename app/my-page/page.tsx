@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { ApprovedMatchResultRow } from "@/components/ApprovedMatchResultRow";
 import { useTierRoster } from "@/components/TierRosterProvider";
 import { WinLossDonut } from "@/components/WinLossDonut";
+import { useResetViewportZoomOnMount } from "@/hooks/useResetViewportZoomOnMount";
 import { usePlayerSession } from "@/hooks/usePlayerSession";
 import {
-  formatTierListLabel,
   PROVISIONAL_TIER_INFO,
   PROVISIONAL_TIER_MAX_MATCHES_EXCLUDED,
   resolveDisplayTier,
@@ -36,6 +36,7 @@ const TIER_SYSTEM_ROWS: { code: TierCode; line: string }[] = [
 ];
 
 export default function MyPage() {
+  useResetViewportZoomOnMount();
   const router = useRouter();
   const { session, ready } = usePlayerSession();
   const { roster: tierRoster, ready: tierRosterReady } = useTierRoster();
@@ -253,7 +254,7 @@ export default function MyPage() {
                     <div className="flex min-h-0 flex-[1_1_0] items-center overflow-hidden">
                       {tier ? (
                         <span className="line-clamp-2 w-full text-left text-[11px] font-semibold leading-tight tracking-tight text-slate-800">
-                          {formatTierListLabel(tier)}
+                          {tier.labelKo}
                         </span>
                       ) : (
                         <span className="text-[11px] leading-none text-slate-400">티어 계산 중…</span>
