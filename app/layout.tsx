@@ -34,7 +34,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-100 font-sans text-slate-800">
         <AppProviders>
           <div className="min-h-screen bg-slate-100">
-            <header className="border-b border-slate-200 bg-white/90 pt-[max(1rem,env(safe-area-inset-top,0px))] shadow-sm backdrop-blur-sm">
+            <header className="border-b border-slate-200 bg-white/90 pt-[max(4rem,calc(env(safe-area-inset-top,0px)+1.25rem))] shadow-sm backdrop-blur-sm md:pt-[max(1rem,env(safe-area-inset-top,0px))]">
               <div className="mx-auto max-w-md space-y-3 px-4 py-3">
                 <AppHeader />
                 <MainNav />
