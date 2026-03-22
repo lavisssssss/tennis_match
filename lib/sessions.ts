@@ -12,6 +12,8 @@ export type Session = {
   status: SessionStatus;
   created_by: string | null;
   created_at: string;
+  /** 대관료 마감(총무). 컬럼 없으면 false 취급 */
+  venue_fee_closed?: boolean;
 };
 
 function normalizeText(value: string) {
@@ -100,8 +102,16 @@ export async function createSession(input: {
 
   const { data, error } = await supabase
     .from("sessions")
-    .insert({ date, location, start_time, end_time, description, status: "open" })
-    .select("id,date,location,start_time,end_time,description,status,created_by,created_at")
+    .insert({
+      date,
+      location,
+      start_time,
+      end_time,
+      description,
+      status: "open",
+      venue_fee_closed: false,
+    })
+    .select("id,date,location,start_time,end_time,description,status,created_by,created_at,venue_fee_closed")
     .single();
 
   if (error) throw new Error(error.message);
@@ -111,11 +121,29 @@ export async function createSession(input: {
 export async function updateSession(
   id: string,
   patch: Partial<
-    Pick<Session, "date" | "location" | "start_time" | "end_time" | "description" | "status">
+    Pick<
+      Session,
+      | "date"
+      | "location"
+      | "start_time"
+      | "end_time"
+      | "description"
+      | "status"
+      | "venue_fee_closed"
+    >
   >,
 ) {
   const next: Partial<
-    Pick<Session, "date" | "location" | "start_time" | "end_time" | "description" | "status">
+    Pick<
+      Session,
+      | "date"
+      | "location"
+      | "start_time"
+      | "end_time"
+      | "description"
+      | "status"
+      | "venue_fee_closed"
+    >
   > = {};
 
   if (typeof patch.date === "string") next.date = normalizeDate(patch.date);
@@ -126,6 +154,7 @@ export async function updateSession(
   if (typeof patch.description === "string")
     next.description = patch.description.trim() ? normalizeText(patch.description) : null;
   if (typeof patch.status === "string") next.status = patch.status;
+  if (typeof patch.venue_fee_closed === "boolean") next.venue_fee_closed = patch.venue_fee_closed;
 
   if (next.location !== undefined && !next.location) throw new Error("장소를 입력해 주세요.");
 
@@ -133,10 +162,22 @@ export async function updateSession(
     .from("sessions")
     .update(next)
     .eq("id", id)
-    .select("id,date,location,start_time,end_time,description,status,created_by,created_at")
+    .select("id,date,location,start_time,end_time,description,status,created_by,created_at,venue_fee_closed")
     .single();
 
   if (error) throw new Error(error.message);
   return data as Session;
 }
 
+/** 대관료 관리: open/closed 일정, 날짜·시간 내림차순 */
+export async function listSessionsForVenueFee() {
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("id,date,location,start_time,end_time,description,status,created_by,created_at,venue_fee_closed")
+    .in("status", ["open", "closed"])
+    .order("date", { ascending: false })
+    .order("start_time", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Session[];
+}

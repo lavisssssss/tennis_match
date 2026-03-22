@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getAutoApproveMatches, setAutoApproveMatches } from "@/lib/clubSettings";
 import { listPendingMatches, setMatchStatus, type MatchRecordWithJoins } from "@/lib/matches";
-import { onMatchApproved } from "@/lib/elo";
+import { applyEloForApprovedMatch } from "@/lib/ratings";
 import { listPlayers, type Player } from "@/lib/players";
 
 function formatTime(t: string) {
@@ -22,6 +23,10 @@ export default function AdminMatchesApprovePage() {
   const [approvedByPlayerId, setApprovedByPlayerId] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+
+  const [autoApprove, setAutoApprove] = useState(false);
+  const [autoApproveLoading, setAutoApproveLoading] = useState(true);
+  const [autoApproveSaving, setAutoApproveSaving] = useState(false);
 
   const approvedByName = useMemo(() => {
     const p = players.find((x) => x.id === approvedByPlayerId);
@@ -48,19 +53,59 @@ export default function AdminMatchesApprovePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const v = await getAutoApproveMatches();
+        if (!cancelled) setAutoApprove(v);
+      } finally {
+        if (!cancelled) setAutoApproveLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function onAutoApproveToggle(next: boolean) {
+    setOk(null);
+    setError(null);
+    setAutoApproveSaving(true);
+    try {
+      await setAutoApproveMatches(next);
+      setAutoApprove(next);
+      setOk(next ? "자동 승인을 켰습니다. 이후 결과 등록은 곧바로 승인됩니다." : "자동 승인을 껐습니다.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "설정 저장 중 오류가 발생했습니다.";
+      setError(
+        `${msg} (Supabase에 club_settings 테이블·RLS가 없다면 supabase/club_settings.sql 을 실행해 주세요.)`,
+      );
+    } finally {
+      setAutoApproveSaving(false);
+    }
+  }
+
   async function approve(id: string) {
     setOk(null);
     setError(null);
     setBusyId(id);
     try {
       const updated = await setMatchStatus({ id, status: "approved", approved_by: approvedByName });
-      const result = onMatchApproved(updated);
-      if (result.winner === null) {
-        setOk("승인 완료 · 동점(승패 판정 없음) · Elo 반영 없음");
-      } else {
+      try {
+        const eloResult = await applyEloForApprovedMatch(updated);
         setOk(
-          `승인 완료 · winner=${result.winner} · eloΔ(가정)=` +
-            result.deltas.map((d) => `${d.player_id.slice(0, 6)}:${d.delta}`).join(", "),
+          eloResult.applied
+            ? `승인 완료 · ${eloResult.message}`
+            : `승인 완료 · ${eloResult.message}`,
+        );
+      } catch (eloErr) {
+        const hint =
+          eloErr instanceof Error && eloErr.message.includes("relation")
+            ? " (Supabase에 supabase/ratings.sql 을 실행했는지 확인하세요.)"
+            : "";
+        setError(
+          `승인은 저장됐으나 Elo 반영 실패: ${eloErr instanceof Error ? eloErr.message : "오류"}${hint}`,
         );
       }
       await refresh();
@@ -92,16 +137,52 @@ export default function AdminMatchesApprovePage() {
     <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
       <section className="space-y-1">
         <h2 className="text-xl font-semibold tracking-tight text-slate-800">경기 기록 승인</h2>
-        <p className="text-xs text-slate-600">Guest가 올린 경기 기록(pending)을 승인/반려합니다.</p>
+        <p className="text-xs text-slate-600">회원이 올린 경기 기록(pending)을 승인/반려합니다. 승인 시 Elo·전적이 반영됩니다.</p>
       </section>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <span className="rounded-full bg-teal-500 px-4 py-1.5 text-[11px] font-medium text-white">
-          Phase 5
+          Phase 7
         </span>
       </div>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-0.5">
+            <p className="text-sm font-semibold text-slate-800">자동 승인</p>
+            <p className="text-[11px] text-slate-600">
+              켜면 결과 등록 시 pending 없이 곧바로 승인 처리됩니다. (DB `club_settings` 필요)
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {autoApproveLoading ? (
+              <span className="text-[11px] text-slate-500">불러오는 중...</span>
+            ) : (
+              <>
+                <span className="text-[11px] font-medium text-slate-600">
+                  {autoApprove ? "ON" : "OFF"}
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoApprove}
+                  disabled={autoApproveSaving}
+                  onClick={() => onAutoApproveToggle(!autoApprove)}
+                  className={`relative h-8 w-14 shrink-0 rounded-full transition ${
+                    autoApprove ? "bg-teal-600" : "bg-slate-300"
+                  } ${autoApproveSaving ? "cursor-wait opacity-70" : "hover:opacity-90"}`}
+                >
+                  <span
+                    className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition ${
+                      autoApprove ? "left-7" : "left-1"
+                    }`}
+                  />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="space-y-0.5">
             <p className="text-sm font-semibold text-slate-800">Pending 리스트</p>

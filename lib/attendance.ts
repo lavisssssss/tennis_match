@@ -8,6 +8,8 @@ export type Attendance = {
   player_id: string;
   status: AttendanceStatus;
   created_at: string;
+  /** 대관료 정산 완료. 컬럼 없으면 false */
+  venue_settled?: boolean;
 };
 
 export type AttendanceRowWithPlayer = Attendance & {
@@ -44,7 +46,9 @@ export async function upsertAttendance(input: {
 export async function listAttendanceForSession(sessionId: string) {
   const { data, error } = await supabase
     .from("attendance")
-    .select("id,session_id,player_id,status,created_at,player:players(id,display_name,name)")
+    .select(
+      "id,session_id,player_id,status,created_at,venue_settled,player:players(id,display_name,name)",
+    )
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
 
@@ -59,7 +63,20 @@ export async function listAttendanceForSession(sessionId: string) {
     player_id: r.player_id,
     status: r.status,
     created_at: r.created_at,
+    venue_settled: Boolean(r.venue_settled),
     player: Array.isArray(r.player) ? r.player[0] ?? null : r.player ?? null,
   }));
+}
+
+export async function updateAttendanceVenueSettled(attendanceId: string, venue_settled: boolean) {
+  const { error } = await supabase.from("attendance").update({ venue_settled }).eq("id", attendanceId);
+  if (error) throw new Error(error.message);
+}
+
+/** 해당 매치에서 참석(attend)으로 신청한 player_id 목록 (중복 제거) */
+export async function listAttendingPlayerIdsForSession(sessionId: string): Promise<string[]> {
+  const rows = await listAttendanceForSession(sessionId);
+  const ids = rows.filter((r) => r.status === "attend").map((r) => r.player_id);
+  return Array.from(new Set(ids));
 }
 

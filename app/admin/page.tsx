@@ -16,6 +16,16 @@ export default function AdminDashboardPage() {
 
       <section className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <Link
+          href="/admin/roles"
+          className="rounded-xl border border-teal-200 bg-teal-50/60 px-4 py-3 text-sm font-semibold text-teal-900 hover:bg-teal-50"
+        >
+          Admin 권한 관리
+          <p className="mt-0.5 text-[11px] font-medium text-teal-800/80">
+            회원 / 운영진(Admin 접근) 역할 지정
+          </p>
+        </Link>
+
+        <Link
           href="/admin/players"
           className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
         >
@@ -42,6 +52,16 @@ export default function AdminDashboardPage() {
           경기 기록 승인 (Phase 5)
           <p className="mt-0.5 text-[11px] font-medium text-slate-500">
             Guest 경기 기록(pending) 승인/반려
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/venue-fee"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+        >
+          대관료 관리 (Phase 6)
+          <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+            총무용 · 참석 정산 · 일정 마감
           </p>
         </Link>
 

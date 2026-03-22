@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { getAutoApproveMatches } from "@/lib/clubSettings";
 
 export type MatchRecordStatus = "pending" | "approved" | "rejected";
 
@@ -72,7 +73,7 @@ export function inferWinnerFromSets(input: { set1: string; set2: string; set3?: 
   return aSets > bSets ? ("A" as const) : ("B" as const);
 }
 
-export async function createPendingMatch(input: {
+export type CreateMatchInput = {
   session_id: string;
   teamA_player1: string;
   teamA_player2: string;
@@ -82,7 +83,13 @@ export async function createPendingMatch(input: {
   set2_score: string;
   set3_score?: string | null;
   created_by: string;
-}) {
+};
+
+async function insertMatchRow(
+  input: CreateMatchInput,
+  status: "pending" | "approved",
+  approved_by: string | null,
+): Promise<MatchRecord> {
   const created_by = normalizeText(input.created_by);
   if (!created_by) throw new Error("입력자(이름/닉네임)를 입력해 주세요.");
 
@@ -98,6 +105,11 @@ export async function createPendingMatch(input: {
   const set2_score = normalizeScore(input.set2_score);
   const set3_score = input.set3_score ? normalizeScore(input.set3_score) : null;
 
+  if (status === "approved") {
+    const who = (approved_by ?? "").trim();
+    if (!who) throw new Error("승인자 정보가 비어 있습니다.");
+  }
+
   const { data, error } = await supabase
     .from("matches")
     .insert({
@@ -109,8 +121,9 @@ export async function createPendingMatch(input: {
       set1_score,
       set2_score,
       set3_score,
-      status: "pending",
+      status,
       created_by,
+      approved_by: status === "approved" ? approved_by : null,
     })
     .select(
       "id,session_id,teama_player1,teama_player2,teamb_player1,teamb_player2,set1_score,set2_score,set3_score,status,created_by,approved_by,created_at",
@@ -119,6 +132,28 @@ export async function createPendingMatch(input: {
 
   if (error) throw new Error(error.message);
   return data as MatchRecord;
+}
+
+/** 자동 승인 설정이 켜져 있으면 곧바로 approved 로 저장하고 Elo를 반영합니다. */
+export async function submitMatchResult(
+  input: CreateMatchInput,
+): Promise<{ record: MatchRecord; autoApproved: boolean; eloMessage?: string }> {
+  const auto = await getAutoApproveMatches();
+  if (!auto) {
+    const record = await insertMatchRow(input, "pending", null);
+    return { record, autoApproved: false };
+  }
+
+  const created = normalizeText(input.created_by);
+  const approved_by = `${created} · 자동승인`;
+  const record = await insertMatchRow(input, "approved", approved_by);
+  const { applyEloForApprovedMatch } = await import("@/lib/ratings");
+  const eloResult = await applyEloForApprovedMatch(record);
+  return { record, autoApproved: true, eloMessage: eloResult.message };
+}
+
+export async function createPendingMatch(input: CreateMatchInput) {
+  return insertMatchRow(input, "pending", null);
 }
 
 export async function listPendingMatches(params?: { limit?: number }) {

@@ -1,9 +1,33 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { PageMascot } from "@/components/PageMascot";
+import { TierMarkImage } from "@/components/TierMarkImage";
+import { usePlayerSession } from "@/hooks/usePlayerSession";
 import { listApprovedMatches, parseScore, type MatchRecordWithJoins } from "@/lib/matches";
 import { listSessions, type Session } from "@/lib/matchs";
+
+type JoinedPlayer = NonNullable<MatchRecordWithJoins["teamA_p1"]>;
+
+function playerLabel(p: JoinedPlayer | null | undefined, fallbackId: string) {
+  return p?.name ?? p?.display_name ?? `${fallbackId.slice(0, 8)}…`;
+}
+
+function PlayerMarkName({
+  playerId,
+  player,
+}: {
+  playerId: string;
+  player: JoinedPlayer | null | undefined;
+}) {
+  return (
+    <span className="inline-flex max-w-[9rem] items-center gap-0.5 sm:max-w-none">
+      <TierMarkImage playerId={playerId} size={14} />
+      <span className="truncate font-medium">{playerLabel(player, playerId)}</span>
+    </span>
+  );
+}
 
 function formatTime(t: string) {
   return t.slice(0, 5);
@@ -15,13 +39,8 @@ function sortSessionsDesc(a: Session, b: Session) {
   return b.created_at.localeCompare(a.created_at);
 }
 
-function teamLabel(a?: { name?: string; display_name: string } | null, b?: { name?: string; display_name: string } | null) {
-  const left = a?.name ?? a?.display_name ?? "—";
-  const right = b?.name ?? b?.display_name ?? "—";
-  return `${left}·${right}`;
-}
-
 export default function MatchRecordsPage() {
+  const { session, ready: sessionReady } = usePlayerSession();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [sessionId, setSessionId] = useState("");
   const [rows, setRows] = useState<MatchRecordWithJoins[]>([]);
@@ -74,6 +93,28 @@ export default function MatchRecordsPage() {
     load();
   }, [sessionId]);
 
+  if (!sessionReady) {
+    return (
+      <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600 shadow-sm">
+          불러오는 중...
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
+        <section className="space-y-1">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-800">결과 조회</h2>
+          <p className="text-xs text-slate-600">로그인 후 승인된 경기 기록을 조회할 수 있습니다.</p>
+        </section>
+        <LoginRequiredCard />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
       <section className="space-y-1">
@@ -125,7 +166,6 @@ export default function MatchRecordsPage() {
               {rows.map((m) => {
                 const { a, b } = parseScore(m.set1_score);
                 const winnerSide: "A" | "B" | null = a === b ? null : a > b ? "A" : "B";
-                const line = `[${teamLabel(m.teamA_p1, m.teamA_p2)} ${a} : ${b} ${teamLabel(m.teamB_p1, m.teamB_p2)}]`;
                 return (
                   <div
                     key={m.id}
@@ -141,9 +181,21 @@ export default function MatchRecordsPage() {
                         Win
                       </span>
                     ) : null}
-                    <p className="mx-auto max-w-full break-words px-11 text-center text-sm font-medium leading-snug tabular-nums">
-                      {line}
-                    </p>
+                    <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-x-1 gap-y-1 px-10 text-center text-sm leading-snug">
+                      <span className="font-medium text-slate-600">[</span>
+                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5">
+                        <PlayerMarkName playerId={m.teama_player1} player={m.teamA_p1} />
+                        <PlayerMarkName playerId={m.teama_player2} player={m.teamA_p2} />
+                      </span>
+                      <span className="shrink-0 px-0.5 font-semibold tabular-nums text-slate-900">
+                        {a}:{b}
+                      </span>
+                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5">
+                        <PlayerMarkName playerId={m.teamb_player1} player={m.teamB_p1} />
+                        <PlayerMarkName playerId={m.teamb_player2} player={m.teamB_p2} />
+                      </span>
+                      <span className="font-medium text-slate-600">]</span>
+                    </div>
                   </div>
                 );
               })}

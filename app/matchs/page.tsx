@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { PageMascot } from "@/components/PageMascot";
+import { usePlayerSession } from "@/hooks/usePlayerSession";
+import { TierBadge } from "@/components/TierBadge";
 import { listAttendanceForSession, type AttendanceRowWithPlayer } from "@/lib/attendance";
 import { listSessions, type Session, type SessionStatus } from "@/lib/matchs";
 
@@ -36,6 +39,7 @@ function statusClass(status: string) {
 }
 
 export default function MatchsPage() {
+  const { session, ready: sessionReady } = usePlayerSession();
   const [matchs, setMatchs] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +101,28 @@ export default function MatchsPage() {
     for (const row of attendance) map[row.status] = (map[row.status] ?? 0) + 1;
     return map;
   }, [attendance]);
+
+  if (!sessionReady) {
+    return (
+      <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600 shadow-sm">
+          불러오는 중...
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
+        <section className="space-y-1">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-800">매치 조회</h2>
+          <p className="text-xs text-slate-600">로그인 후 매치와 참석 현황을 확인할 수 있습니다.</p>
+        </section>
+        <LoginRequiredCard />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 py-2">
@@ -211,9 +237,12 @@ export default function MatchsPage() {
                               key={row.id}
                               className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
                             >
-                              <p className="min-w-0 truncate text-sm font-medium text-slate-800">
-                                {row.player?.display_name ?? row.player_id}
-                              </p>
+                              <div className="flex min-w-0 flex-1 items-center gap-2">
+                                <p className="min-w-0 truncate text-sm font-medium text-slate-800">
+                                  {row.player?.display_name ?? row.player_id}
+                                </p>
+                                <TierBadge playerId={row.player_id} />
+                              </div>
                               <span
                                 className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusClass(
                                   row.status,
@@ -240,7 +269,7 @@ export default function MatchsPage() {
             팁
           </p>
           <p className="mt-1 text-xs text-slate-600">
-            Home에서 저장한 참석 상태는 이 화면과 Admin의 “경기 일정 관리”에서 확인할 수 있습니다.
+            참여신청에서 저장한 참석 상태는 이 화면과 Admin의 “경기 일정 관리”에서 확인할 수 있습니다.
           </p>
         </section>
       ) : null}
