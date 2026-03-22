@@ -17,9 +17,9 @@ function PlayerMarkName({
   player: JoinedPlayer | null | undefined;
 }) {
   return (
-    <span className="inline-flex max-w-[9rem] items-center gap-0.5 sm:max-w-none">
+    <span className="inline-flex min-w-0 max-w-[5.5rem] shrink items-center gap-0.5 sm:max-w-[7rem]">
       <TierMarkImage playerId={playerId} size={14} />
-      <span className="truncate font-medium">{playerLabel(player, playerId)}</span>
+      <span className="min-w-0 truncate font-medium">{playerLabel(player, playerId)}</span>
     </span>
   );
 }
@@ -32,29 +32,35 @@ export function ApprovedMatchResultRow({ m }: { m: MatchRecordWithJoins }) {
   return (
     <div className="relative rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800">
       {winnerSide === "A" ? (
-        <span className="absolute left-2 top-1/2 z-[1] -translate-y-1/2 whitespace-nowrap rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-          Win
+        <span
+          className="absolute left-2 top-1/2 z-[1] -translate-y-1/2 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+          aria-label="승"
+        >
+          W
         </span>
       ) : null}
       {winnerSide === "B" ? (
-        <span className="absolute right-2 top-1/2 z-[1] -translate-y-1/2 whitespace-nowrap rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-          Win
+        <span
+          className="absolute right-2 top-1/2 z-[1] -translate-y-1/2 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+          aria-label="승"
+        >
+          W
         </span>
       ) : null}
-      <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-x-1 gap-y-1 px-10 text-center text-sm leading-snug">
-        <span className="font-medium text-slate-600">[</span>
-        <span className="inline-flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5">
+      <div className="mx-auto flex max-w-full flex-nowrap items-center justify-center gap-x-0.5 overflow-hidden px-7 text-center text-sm leading-none sm:px-8">
+        <span className="shrink-0 font-medium text-slate-600">[</span>
+        <span className="inline-flex min-w-0 flex-nowrap items-center justify-center gap-x-0.5">
           <PlayerMarkName playerId={m.teama_player1} player={m.teamA_p1} />
           <PlayerMarkName playerId={m.teama_player2} player={m.teamA_p2} />
         </span>
         <span className="shrink-0 px-0.5 font-semibold tabular-nums text-slate-900">
           {a}:{b}
         </span>
-        <span className="inline-flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5">
+        <span className="inline-flex min-w-0 flex-nowrap items-center justify-center gap-x-0.5">
           <PlayerMarkName playerId={m.teamb_player1} player={m.teamB_p1} />
           <PlayerMarkName playerId={m.teamb_player2} player={m.teamB_p2} />
         </span>
-        <span className="font-medium text-slate-600">]</span>
+        <span className="shrink-0 font-medium text-slate-600">]</span>
       </div>
     </div>
   );

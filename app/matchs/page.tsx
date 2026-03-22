@@ -5,8 +5,6 @@ import { LoginRequiredCard } from "@/components/LoginRequiredCard";
 import { PageMascot } from "@/components/PageMascot";
 import { TierMarkImage } from "@/components/TierMarkImage";
 import { usePlayerSession } from "@/hooks/usePlayerSession";
-import { formatTierListLabel, resolveDisplayTier } from "@/lib/eloTier";
-import { useTierRoster } from "@/components/TierRosterProvider";
 import { listAttendanceForSession, type AttendanceRowWithPlayer } from "@/lib/attendance";
 import { listSessions, type Session, type SessionStatus } from "@/lib/matchs";
 
@@ -40,18 +38,12 @@ function statusClass(status: string) {
   return "bg-slate-100 text-slate-700 border-slate-200";
 }
 
-function MatchsAttendeeTier({ playerId }: { playerId: string }) {
-  const { roster, ready } = useTierRoster();
-  const tier =
-    ready && roster.length > 0 ? resolveDisplayTier(roster, playerId) : null;
-  return (
-    <div className="flex min-w-0 flex-1 items-center gap-2">
-      <TierMarkImage playerId={playerId} size={20} />
-      <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
-        {tier ? formatTierListLabel(tier) : "티어 계산 중…"}
-      </span>
-    </div>
-  );
+function attendeeDisplayName(row: AttendanceRowWithPlayer) {
+  const d = row.player?.display_name?.trim();
+  if (d) return d;
+  const n = row.player?.name?.trim();
+  if (n) return n;
+  return "이름 없음";
 }
 
 export default function MatchsPage() {
@@ -248,14 +240,24 @@ export default function MatchsPage() {
                         </div>
                       ) : (
                         <div className="space-y-2">
+                          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-1 text-[10px] font-semibold text-slate-500">
+                            <span className="w-7 text-center">마크</span>
+                            <span>이름</span>
+                            <span className="text-right">참석현황</span>
+                          </div>
                           {attendance.map((row) => (
                             <div
                               key={row.id}
-                              className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                              className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
                             >
-                              <MatchsAttendeeTier playerId={row.player_id} />
+                              <div className="flex w-7 shrink-0 justify-center">
+                                <TierMarkImage playerId={row.player_id} size={22} />
+                              </div>
+                              <span className="min-w-0 truncate text-sm font-medium text-slate-800">
+                                {attendeeDisplayName(row)}
+                              </span>
                               <span
-                                className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusClass(
+                                className={`shrink-0 justify-self-end rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusClass(
                                   row.status,
                                 )}`}
                               >
