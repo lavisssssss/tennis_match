@@ -99,8 +99,9 @@ export function ApprovedMatchResultRow({ m, variant = "full" }: Props) {
       ) : null}
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] grid-rows-2 gap-x-2 gap-y-2 px-6 sm:px-7">
-        <div className="flex min-w-0 items-center justify-end">
+        <div className="row-span-2 flex min-w-0 flex-col items-end justify-center gap-2">
           <PlayerMarkName playerId={m.teama_player1} player={m.teamA_p1} />
+          <PlayerMarkName playerId={m.teama_player2} player={m.teamA_p2} />
         </div>
         <div className="row-span-2 flex items-center justify-center self-stretch px-0.5">
           <span className="shrink-0 text-base font-bold tabular-nums leading-none text-slate-900">
@@ -108,9 +109,6 @@ export function ApprovedMatchResultRow({ m, variant = "full" }: Props) {
           </span>
         </div>
         <div className="flex min-w-0 items-center justify-start">
-          <PlayerMarkName playerId={m.teama_player2} player={m.teamA_p2} />
-        </div>
-        <div className="flex min-w-0 items-center justify-end">
           <PlayerMarkName playerId={m.teamb_player1} player={m.teamB_p1} />
         </div>
         <div className="flex min-w-0 items-center justify-start">
