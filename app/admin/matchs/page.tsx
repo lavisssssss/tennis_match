@@ -11,11 +11,11 @@ import {
 } from "@/lib/matchs";
 import {
   listAttendanceForSession,
+  updateAttendanceCheckedIn,
   upsertAttendance,
   type AttendanceRowWithPlayer,
   type AttendanceStatus,
 } from "@/lib/attendance";
-import { TierBadge } from "@/components/TierBadge";
 import { useTierRoster } from "@/components/TierRosterProvider";
 import { usePlayers } from "@/hooks/usePlayers";
 import { DEFAULT_ELO } from "@/lib/ratings";
@@ -193,16 +193,38 @@ export default function AdminMatchsPage() {
     setToast(null);
     setAttendanceBusyPlayerId(playerId);
     try {
+      const prev = attendance.find((r) => r.player_id === playerId);
       await upsertAttendance({
         session_id: manageMatchId,
         player_id: playerId,
         status: next,
       });
+      if (prev && next !== "attend") {
+        await updateAttendanceCheckedIn(prev.id, false);
+      }
       const rows = await listAttendanceForSession(manageMatchId);
       setAttendance(rows);
       setToast("상태를 변경했습니다.");
     } catch (e) {
       setToast(e instanceof Error ? e.message : "상태 변경 중 오류가 발생했습니다.");
+    } finally {
+      setAttendanceBusyPlayerId(null);
+    }
+  }
+
+  async function setCheckedInForRow(rowId: string, nextChecked: boolean) {
+    const row = attendance.find((r) => r.id === rowId);
+    if (!row || row.status !== "attend") return;
+    setAttendanceBusyPlayerId(row.player_id);
+    setToast(null);
+    try {
+      await updateAttendanceCheckedIn(rowId, nextChecked);
+      setAttendance((prev) =>
+        prev.map((r) => (r.id === rowId ? { ...r, checked_in: nextChecked } : r)),
+      );
+      setToast(nextChecked ? "출석 ON으로 저장했습니다." : "출석 OFF로 저장했습니다.");
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "출석 저장 중 오류가 발생했습니다.");
     } finally {
       setAttendanceBusyPlayerId(null);
     }
@@ -241,7 +263,7 @@ export default function AdminMatchsPage() {
           매치(경기 일정) 관리 (Admin · Phase 3/4)
         </h2>
         <p className="text-xs text-slate-600">
-          매치를 생성/수정하고, 참석 상태를 관리합니다.
+          매치를 생성/수정하고, 참석 신청·출결(대관료 정산 대상)을 관리합니다.
         </p>
       </section>
 
@@ -356,7 +378,7 @@ export default function AdminMatchsPage() {
                         disabled={busy || isDeleted}
                         className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {isManaging ? "참석닫기" : "참석관리"}
+                        {isManaging ? "닫기" : "출결관리"}
                       </button>
                       <button
                         type="button"
@@ -389,11 +411,9 @@ export default function AdminMatchsPage() {
                     <div className="mt-3 rounded-xl bg-slate-50 p-3">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <div className="space-y-0.5">
-                          <p className="text-sm font-semibold text-slate-800">
-                            참석/출석 관리
-                          </p>
+                          <p className="text-sm font-semibold text-slate-800">출결 관리</p>
                           <p className="text-[11px] text-slate-500">
-                            상태 변경은 즉시 저장됩니다.
+                            참석-출석 on 인 경우에만 대관료 정산목록에 포함됩니다.
                           </p>
                         </div>
                         <button
@@ -443,7 +463,7 @@ export default function AdminMatchsPage() {
                                 return (
                                   <div
                                     key={row.id}
-                                    className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                                    className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
                                   >
                                     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                                       <p className="min-w-0 truncate text-sm font-medium text-slate-800">
@@ -453,23 +473,61 @@ export default function AdminMatchsPage() {
                                         Elo{" "}
                                         {tierRoster.find((x) => x.player_id === row.player_id)?.elo ?? DEFAULT_ELO}
                                       </span>
-                                      <TierBadge playerId={row.player_id} />
                                     </div>
-                                    <select
-                                      value={row.status}
-                                      onChange={(e) =>
-                                        changeAttendance(
-                                          row.player_id,
-                                          e.target.value as AttendanceStatus,
-                                        )
-                                      }
-                                      disabled={busyRow}
-                                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] font-semibold text-slate-700 outline-none ring-teal-500 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                      <option value="attend">참석</option>
-                                      <option value="wait">대기</option>
-                                      <option value="cancel">취소</option>
-                                    </select>
+                                    <div className="flex flex-wrap items-center justify-end gap-2 sm:shrink-0">
+                                      {row.status === "attend" ? (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-[10px] font-medium text-slate-500">출석</span>
+                                          <div
+                                            className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5"
+                                            role="group"
+                                            aria-label="출석 여부"
+                                          >
+                                            <button
+                                              type="button"
+                                              disabled={busyRow}
+                                              onClick={() => setCheckedInForRow(row.id, true)}
+                                              className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition disabled:opacity-50 ${
+                                                row.checked_in
+                                                  ? "bg-teal-600 text-white shadow-sm"
+                                                  : "bg-transparent text-slate-500 hover:bg-white"
+                                              }`}
+                                            >
+                                              ON
+                                            </button>
+                                            <button
+                                              type="button"
+                                              disabled={busyRow}
+                                              onClick={() => setCheckedInForRow(row.id, false)}
+                                              className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition disabled:opacity-50 ${
+                                                !row.checked_in
+                                                  ? "bg-slate-600 text-white shadow-sm"
+                                                  : "bg-transparent text-slate-500 hover:bg-white"
+                                              }`}
+                                            >
+                                              OFF
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-[10px] text-slate-400">출석 — (참석 시 설정)</span>
+                                      )}
+                                      <select
+                                        value={row.status}
+                                        onChange={(e) =>
+                                          changeAttendance(
+                                            row.player_id,
+                                            e.target.value as AttendanceStatus,
+                                          )
+                                        }
+                                        disabled={busyRow}
+                                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[12px] font-semibold text-slate-700 outline-none ring-teal-500 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        <option value="attend">참석</option>
+                                        <option value="wait">대기</option>
+                                        <option value="cancel">취소</option>
+                                      </select>
+                                    </div>
                                   </div>
                                 );
                               })}

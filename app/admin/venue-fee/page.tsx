@@ -58,7 +58,7 @@ export default function AdminVenueFeePage() {
     setDetailError(null);
     try {
       const rows = await listAttendanceForSession(sessionId);
-      const attendOnly = rows.filter((r) => r.status === "attend");
+      const attendOnly = rows.filter((r) => r.status === "attend" && r.checked_in);
       setAttendRows(attendOnly);
       const m: Record<string, boolean> = {};
       for (const r of attendOnly) m[r.id] = Boolean(r.venue_settled);
@@ -88,7 +88,7 @@ export default function AdminVenueFeePage() {
 
   async function onSave() {
     if (!selectedId || attendRows.length === 0) {
-      setToast("저장할 참석 데이터가 없습니다.");
+      setToast("저장할 출결 ON 인원이 없습니다.");
       return;
     }
     setSaving(true);
@@ -148,7 +148,7 @@ export default function AdminVenueFeePage() {
             <h2 className="text-xl font-semibold tracking-tight text-slate-800">
               대관료 관리 (Phase 6)
             </h2>
-            <p className="text-xs text-slate-600">총무용 · 일정별 참석자 정산 및 마감</p>
+            <p className="text-xs text-slate-600">총무용 · 출결 ON 인원 정산 및 일정 마감</p>
           </div>
           <Link href="/admin" className="text-xs font-semibold text-teal-700 hover:underline">
             ← Admin 홈
@@ -221,9 +221,9 @@ export default function AdminVenueFeePage() {
 
       {selectedId && selectedSession ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-800">참석자 · 정산</p>
+          <p className="text-sm font-semibold text-slate-800">출결 인원 · 정산</p>
           <p className="text-[11px] text-slate-500">
-            참석으로 신청한 인원만 표시합니다. 정산 완료는 토글로 표시합니다.
+            매치 관리에서 참석 + 출결 ON으로 설정한 인원만 표시합니다. 정산 완료는 토글로 표시합니다.
           </p>
 
           {detailLoading ? (
@@ -231,16 +231,20 @@ export default function AdminVenueFeePage() {
           ) : detailError ? (
             <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
               {detailError}
+              <p className="mt-2 text-[11px] text-rose-800/90">
+                컬럼 오류 시 supabase/venue_fee.sql · attendance_checked_in.sql 적용 여부를 확인하세요.
+              </p>
             </div>
           ) : (
             <>
               <p className="mt-3 text-xs font-medium text-slate-700">
-                참석 <span className="text-teal-700">{attendRows.length}</span>명
+                출결 ON <span className="text-teal-700">{attendRows.length}</span>명
               </p>
 
               {attendRows.length === 0 ? (
                 <div className="mt-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
-                  참석 신청이 없습니다.
+                  출결 ON 인원이 없습니다. Admin 매치 관리 → 출결관리에서 참석 인원의 출결을 ON으로
+                  설정해 주세요.
                 </div>
               ) : (
                 <ul className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-100">

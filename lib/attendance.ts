@@ -10,6 +10,8 @@ export type Attendance = {
   created_at: string;
   /** 대관료 정산 완료. 컬럼 없으면 false */
   venue_settled?: boolean;
+  /** 참석(attend) 중 실제 출결. 대관료 정산 목록은 true만 포함. 컬럼 없으면 false */
+  checked_in?: boolean;
 };
 
 export type AttendanceRowWithPlayer = Attendance & {
@@ -47,7 +49,7 @@ export async function listAttendanceForSession(sessionId: string) {
   const { data, error } = await supabase
     .from("attendance")
     .select(
-      "id,session_id,player_id,status,created_at,venue_settled,player:players(id,display_name,name)",
+      "id,session_id,player_id,status,created_at,venue_settled,checked_in,player:players(id,display_name,name)",
     )
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
@@ -64,12 +66,18 @@ export async function listAttendanceForSession(sessionId: string) {
     status: r.status,
     created_at: r.created_at,
     venue_settled: Boolean(r.venue_settled),
+    checked_in: Boolean((r as { checked_in?: boolean }).checked_in),
     player: Array.isArray(r.player) ? r.player[0] ?? null : r.player ?? null,
   }));
 }
 
 export async function updateAttendanceVenueSettled(attendanceId: string, venue_settled: boolean) {
   const { error } = await supabase.from("attendance").update({ venue_settled }).eq("id", attendanceId);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateAttendanceCheckedIn(attendanceId: string, checked_in: boolean) {
+  const { error } = await supabase.from("attendance").update({ checked_in }).eq("id", attendanceId);
   if (error) throw new Error(error.message);
 }
 

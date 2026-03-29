@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
         >
           매치(경기 일정) 관리 (Phase 3)
           <p className="mt-0.5 text-[11px] font-medium text-slate-500">
-            매치 생성/수정 및 목록/참석 관리
+            매치 생성/수정 · 출결 관리(대관료 출결 ON)
           </p>
         </Link>
 
@@ -61,7 +61,7 @@ export default function AdminDashboardPage() {
         >
           대관료 관리 (Phase 6)
           <p className="mt-0.5 text-[11px] font-medium text-slate-500">
-            총무용 · 참석 정산 · 일정 마감
+            총무용 · 출결 ON 인원 정산 · 일정 마감
           </p>
         </Link>
 

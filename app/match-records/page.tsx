@@ -143,7 +143,7 @@ export default function MatchRecordsPage() {
           ) : (
             <div className="space-y-2">
               {rows.map((m) => (
-                <ApprovedMatchResultRow key={m.id} m={m} />
+                <ApprovedMatchResultRow key={m.id} m={m} variant="records" />
               ))}
             </div>
           )}
