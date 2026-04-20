@@ -59,10 +59,13 @@ export default function RankingPage() {
       ...r,
       tier: resolveDisplayTier(roster, r.player_id),
     }));
-    const filtered =
-      tierFilter === "all"
-        ? withTier
-        : withTier.filter((r) => r.tier.code === tierFilter);
+    const filtered = withTier.filter((r) => {
+      if (tierFilter === "all") {
+        // 전체 랭킹에서는 0승 0패(경기 미참여) 선수를 숨깁니다.
+        return r.wins + r.losses > 0;
+      }
+      return r.tier.code === tierFilter;
+    });
     return filtered.sort((a, b) => {
       if (b.elo !== a.elo) return b.elo - a.elo;
       return a.player_id.localeCompare(b.player_id);
